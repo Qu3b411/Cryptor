@@ -11,17 +11,17 @@ def LogPrompt(st):
     print ("\t"+os.path.basename(__file__)+">>\t"+st);
 
 LogPrompt("Opening C2.h...")
-with open("./SVR_SRC/c2.h","r") as f:
+with open("./SVR_SRC/c2.py","r") as f:
     lines = f.readlines();
     LogPrompt("Locating Information in C2.h...")
     for line in lines:
-        r1 = re.match("#define AESKEY \"(.*?)\"",line);
+        r1 = re.match("AESKEY = \"(.*?)\"",line);
         if r1:
             LogPrompt("AESKEY Located!")
             LogPrompt("Base64 Decoding AESKEY...")
             AESKEY = base64.b64decode(r1.group(1));
             LogPrompt("AESKEY Retrieved and decoded!")
-        r2 = re.match("#define IV \"(.*?)\"",line);
+        r2 = re.match("IV = \"(.*?)\"",line);
         if r2:
             LogPrompt("IV Located!")
             LogPrompt("Base64 Decoding IV...")

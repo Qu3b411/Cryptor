@@ -55,9 +55,9 @@ Clean:
 	@echo Cleanning all generated files and directories
 	rm -rf ./bin
 	rm -f $(SrcPath)/Cryptor.h
-	rm -f $(SvrPath)/c2.h
+	rm -f $(SvrPath)/c2.py
 	rm -f ./Conf
-	@echo Directorys and files are clean. 
+	@echo Directorys and files are clean.
 
 .PHONY: Conf
 Conf:
@@ -67,5 +67,6 @@ Conf:
 
 $(Dpath):
 	mkdir -p $(Dpath)
+
 $(Rpath):
 	mkdir -p $(Rpath)
