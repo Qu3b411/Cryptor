@@ -8,6 +8,8 @@
 	5. xor OTP witk AES key
 	6. base 64 and send (OTP ^ AES) to client
 ### Client side (CS_SRC)
+	1
+	1. WTF IS GOING ON WITH LINE 79 IN CL_SRC/main.c i thought the crypto was working but :(
 	1. ~~~Connect to server~~~
 	2. base64 encode and send the eencrypted OTP to the server
 	3. retrive the AES key from the server and base 64 decode.

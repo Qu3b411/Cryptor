@@ -10,4 +10,4 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
     sock.bind(('127.0.0.1',PORT_SVR));
     sock.listen(1);
     conn, addr = sock.accept()
-    print("IV IS "+str(IV)); #proof of concept, i can get values from an import
+

