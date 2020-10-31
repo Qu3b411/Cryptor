@@ -1,4 +1,5 @@
 # C2 Payload Cryptor
+# THIS IS STILL A WORK IN PROGRESSSS, I HAVE BEEN BUISY WITH SCHOOL AND HAVE NOT BEEN ABLE TO WORK ON IT 
 ---
 ## Getting started
 build this on a windows 10 image for this payload to work.
