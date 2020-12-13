@@ -108,10 +108,15 @@ with open ('./CL_src/Cryptor.h', 'w') as f:
     HeaderComment();
     pubkey = rsakey.publickey();
     print("#define PUBKEY \"", end='');
-    pubkeystr = str(pubkey.exportKey('PEM'));
-    r1 = re.match("b'(.*?)'",pubkeystr);
-    print(r1.group(1), end='');
+    pubkeystr = pubkey.exportKey(format='DER',pkcs=1);
+    #r1 = re.match("b'(.*).$",pubkeystr);
+    er1 = base64.b64encode(pubkeystr).decode("utf-8");
+    #print(pubkeystr, end='');
+    print(er1, end='');
     print ("\"");
+    print("\n#define certLen ", end='');
+    #print(len(pubkeystr));
+    print(len(pubkeystr));
     PrintIV()
     HeadderCommonDef();
     print("#define IPADDR_SVR \""+IPADDR_SVR+"\"");

