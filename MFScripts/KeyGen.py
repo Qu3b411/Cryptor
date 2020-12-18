@@ -135,10 +135,9 @@ with open ('./SVR_SRC/C2.py', 'w') as f:
     PyComment();
     priv_key = rsakey.exportKey();
     print("PRVKEY = \"", end='');
-    print(priv_key, end='');
     priv_keystr = str(priv_key);
     r1 = re.match("b'(.*?)'",priv_keystr);
-    print(priv_keystr, end='');
+    print(r1.group(1), end='');
     print("\"");
     print("AESKEY = \"", end='');
     print(base64.b64encode(aeskey).decode("utf-8"), end='');

@@ -5,8 +5,8 @@
 
 from C2 import *;
 import sys
+from Crypto.PublicKey import RSA
 import socket
-import numpy as np
 
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
     sock.bind(('127.0.0.1',PORT_SVR))
@@ -22,4 +22,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         EncryptedOTP = conn.recv(OTPPacketLen)
         print(''.join('0x{:02x} '.format(x) for x in EncryptedOTP))
         print("EncryptedOTP recieved")
+        rsaKey = RSA.import_key(PRVKEY);
+        print("imported Private Keys")
+
   
