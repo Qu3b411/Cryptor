@@ -56,6 +56,7 @@ Clean:
 	rm -rf ./bin
 	rm -f $(SrcPath)/Cryptor.h
 	rm -f $(SvrPath)/c2.py
+	rm -rf $(SvrPath)/__pycache__
 	rm -f ./Conf
 	@echo Directorys and files are clean.
 

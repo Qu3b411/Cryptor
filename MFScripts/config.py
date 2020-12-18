@@ -31,10 +31,28 @@ def config():
                             "\t"+os.path.basename(__file__)+">>\tEnter the Port number for your server: "));
                 f.write("PORT_SVR = " + str(PORT)+"\n");
                 LogPrompt("Writing additional default configurations to (Conf), These settings are recommended");
-                LogPrompt("Default AES key length 256 bit (32 bytes)");
-                f.write("AES_KEY_LEN = 32\n")
-                LogPrompt("Default RSA key length written to (Conf), 4096 bit");
-                f.write("RSA_KEY_LEN = 4096\n")
+                LogPrompt("Chose a security level\n\t\t\t\t 1 - RSA 2048 / AES 128\n\t\t\t\t 2 - RSA 3072 / AES 192 \n\t\t\t\t 3 - RSA 4096 / AES 256")
+                securityLevel = 0;
+                while securityLevel < 1 or securityLevel > 3:
+                    securityLevel = int(input("\t"+os.path.basename(__file__)+">>\tEnter Security Level:" ))
+                
+                if securityLevel == 1: 
+                    LogPrompt("AES key length written to (Conf), 128 bit (16 bytes)");
+                    f.write("AES_KEY_LEN = 16\n")
+                    LogPrompt("RSA key length written to (Conf), 2048 bit (256 bytes)");
+                    f.write("RSA_KEY_LEN = 2048\n")
+                elif securityLevel == 2:
+                    LogPrompt("AES key length written to (Conf), 192 bit (24 bytes)");
+                    f.write("AES_KEY_LEN = 24\n")
+                    LogPrompt("RSA key length written to (Conf), 3072 bit (384 bytes)");
+                    f.write("RSA_KEY_LEN = 3072\n")
+                elif securityLevel == 3:
+                    LogPrompt("AES key length written to (Conf), 256 bit (32 bytes)");
+                    f.write("AES_KEY_LEN = 32\n")
+                    LogPrompt("RSA key length written to (Conf), 4096 bit (512 bytes)");
+                    f.write("RSA_KEY_LEN = 4096\n")
+
+
             LogPrompt("Conf file generated");
         except IOError:
             LogPrompt("Conf file could not be generated");
