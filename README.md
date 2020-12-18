@@ -19,7 +19,7 @@ This will prompt you for the aforementioned information to create a new Conf fil
 the payload up until this point is an empty shell open to whatever payloads you can think up, you can find the **C** file for the client configuration in ```./CL_SRC/main.c``` this is where the payload section exists,
 
 to remove everything besides the default files issue
--       make clean
+-       make Clean
 this will remove everything that was generated during compile time, this includes auto-generated header files.
 
 # This is still incomplete!
