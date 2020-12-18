@@ -10,7 +10,7 @@ pe = pefile.PE(sys.argv[1]+"/cryptor.exe")
 def LogPrompt(st):
     print ("\t"+os.path.basename(__file__)+">>\t"+st);
 
-LogPrompt("Opening C2.h...")
+LogPrompt("Opening C2.py...")
 with open("./SVR_SRC/c2.py","r") as f:
     lines = f.readlines();
     LogPrompt("Locating Information in C2.h...")
@@ -29,7 +29,7 @@ with open("./SVR_SRC/c2.py","r") as f:
             LogPrompt("IV Retrieved and decoded!")
             print(IV);
 
-LogPrompt("Closing C2.h!")
+LogPrompt("Closing C2.py!")
 LogPrompt("Locating Section Attributes")
 stdo =sys.stdout;
 for section in pe.sections:
