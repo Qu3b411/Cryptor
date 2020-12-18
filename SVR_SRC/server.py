@@ -6,6 +6,7 @@
 from C2 import *;
 import sys
 from Crypto.PublicKey import RSA
+from Crypto.Signature import PKCS1_v1_5
 import socket
 
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
@@ -18,11 +19,11 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         if(conn.send(b"\x01") != 1):
             print("An error has occured in this connection before the EncryptedOTP could be recieved");
             sys.exit(-1)
-        print("OTPPacketLen: ", hex(OTPPacketLen))
         EncryptedOTP = conn.recv(OTPPacketLen)
-        print(''.join('0x{:02x} '.format(x) for x in EncryptedOTP))
+        # print(''.join('0x{:02x} '.format(x) for x in EncryptedOTP))
         print("EncryptedOTP recieved")
-        rsaKey = RSA.import_key(PRVKEY);
+        rsaKey = RSA.import_key(PRVKEY)
         print("imported Private Keys")
-
+        cipher = PKCS1_v1_5.new(rsaKey)
+        #        3OTP = cipher.decrypt(EncryptedOTP)
   

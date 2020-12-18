@@ -209,9 +209,6 @@ if( CryptImport ) {
 		exit(-1);
 	}
 	closesocket(Connection);
-	 for(int x = 0 ; x < EncryptedOTPWriteLen; x++){
-		 printf("0x%02x ",*(EncryptedOTP+x));
-	 }
 	/*
 	 * send the EncryptedOTP to the server
 	 */
