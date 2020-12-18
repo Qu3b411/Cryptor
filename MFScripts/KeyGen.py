@@ -67,6 +67,11 @@ def PrintIV():
     print(IV_STR, end='');
     print("\"");
 
+GenNewKeys = "";
+while GenNewKeys != "y":
+    GenNewKeys = str(input("Do you wish to generate new keys? (NOTE: Required for first run) [Y/N] ").lower().strip())
+    if GenNewKeys == 'n':
+        sys.exit()
 
 try:
     with open ('Conf', 'r') as f:
