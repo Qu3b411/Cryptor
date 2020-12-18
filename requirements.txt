@@ -1,3 +1,2 @@
 pefile
 pycryptodomex
-numpy
