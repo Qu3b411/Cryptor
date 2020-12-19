@@ -49,7 +49,7 @@ with open(sys.argv[1]+"/cryptor.exe",'rb+') as f:
     LogPrompt("Reading in .payload section...");
     SectionData = f.read(SectionSize);
     print(AESKEY)
-    cipher = AES.new(AESKEY, AES.MODE_CBC, IV);
+    cipher = AES.new(AESKEY, AES.MODE_GCM, IV);
     LogPrompt("Reading Section Completed!")
     LogPrompt("Encrypting section...")
     SectionData = cipher.decrypt(SectionData);
