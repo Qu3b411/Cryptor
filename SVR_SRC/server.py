@@ -8,6 +8,10 @@ import sys
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_v1_5
 import socket
+import base64
+
+def applyOTP(OTP, KEY):
+    return bytes(o ^ k for o, k in zip(OTP, KEY))
 
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
     sock.bind(('127.0.0.1',PORT_SVR))
@@ -26,5 +30,8 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         print("imported Private Keys")
         cipher = PKCS1_v1_5.new(rsaKey)
         OTP = cipher.decrypt(EncryptedOTP,"failed")
-        print (OTP)
-  
+        
+        aesKey = base64.b64decode(AESKEY, altchars=None, validate=False)
+        print (aesKey);
+        OTPencodedAESKey = applyOTP(OTP,aesKey)
+        conn.send(OTPencodedAESKey);
