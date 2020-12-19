@@ -53,6 +53,8 @@ __attribute__((constructor(101), section(".cryptor"))) int construct()
 	*/
 	extern UINT64 START_OF_PAYLOAD;
 	extern UINT64 END_OF_PAYLOAD;
+		printf("%x ", &(START_OF_PAYLOAD));
+		printf("%x ", &(END_OF_PAYLOAD));
 	UINT64  addr_S = (UINT64)&START_OF_PAYLOAD;
 	UINT64  addr_e = (UINT64)&END_OF_PAYLOAD;
 	/*

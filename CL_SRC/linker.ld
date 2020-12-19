@@ -64,7 +64,7 @@ SECTIONS
   .payload BLOCK(__section_alignment__) : {
     START_OF_PAYLOAD = . ;
     *(.payload)
-    . = ALIGN(0x10);
+    . = ALIGN(0x200); /*minimum size of a section*/
     END_OF_PAYLOAD = . ;
   }
   /* The Cygwin32 library uses a section to avoid copying certain data
