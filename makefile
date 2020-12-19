@@ -40,9 +40,10 @@ Release: $(SrcPath)/main.c $(SrcPath)/linker.ld | $(Config.h) $(Rpath)
 	@echo Header files Generated.
 
 	@echo [*] LINKING FILE...
-	gcc -s -Os -T $(SrcPath)/Linker.ld  $(SrcPath)/main.c -o $(Rpath)/cryptor.exe -lCrypt32 -lWs2_32
+	gcc -s -static -mwindows -fvisibility=hidden -T $(SrcPath)/Linker.ld  $(SrcPath)/main.c -o $(Rpath)/cryptor.exe -lCrypt32 -lWs2_32 -lBCrypt
 	@echo COMPLETED: file has been linked into a mn executable format!
-
+	strip -R .comment -R .note $(Rpath)/cryptor.exe
+	strip -s $(Rpath)/cryptor.exe
 
 	@echo [*] REMOVING READONLY PROTECTION FROM .payload...
 	objcopy --set-section-flags .payload=code,data,alloc,contents,load $(Rpath)/cryptor.exe $(Rpath)/cryptor.exe
