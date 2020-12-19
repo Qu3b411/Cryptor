@@ -24,14 +24,12 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             print("An error has occured in this connection before the EncryptedOTP could be recieved");
             sys.exit(-1)
         EncryptedOTP = conn.recv(OTPPacketLen)
-        # print(''.join('0x{:02x} '.format(x) for x in EncryptedOTP))
-        print("EncryptedOTP recieved")
         rsaKey = RSA.import_key(PRVKEY)
-        print("imported Private Keys")
         cipher = PKCS1_v1_5.new(rsaKey)
         OTP = cipher.decrypt(EncryptedOTP,"failed")
         
         aesKey = base64.b64decode(AESKEY, altchars=None, validate=False)
-        print (aesKey);
+        print(''.join('0x{:02x} '.format(x) for x in aesKey))
+        
         OTPencodedAESKey = applyOTP(OTP,aesKey)
         conn.send(OTPencodedAESKey);

