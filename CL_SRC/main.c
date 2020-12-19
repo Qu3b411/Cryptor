@@ -128,6 +128,10 @@ if( CryptImport ) {
 			exit(0);
 		}
 
+	for( int x = 0 ; x<AESKEYLEN ; x++)
+	{
+		printf("0x%x ", *(OTP+x));
+	}
 	/*
  	* Encrypt the one time pad with the RSA key
  	*/

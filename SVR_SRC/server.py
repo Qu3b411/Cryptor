@@ -6,7 +6,7 @@
 from C2 import *;
 import sys
 from Crypto.PublicKey import RSA
-from Crypto.Signature import PKCS1_v1_5
+from Crypto.Cipher import PKCS1_v1_5
 import socket
 
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
@@ -25,5 +25,6 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         rsaKey = RSA.import_key(PRVKEY)
         print("imported Private Keys")
         cipher = PKCS1_v1_5.new(rsaKey)
-        #        3OTP = cipher.decrypt(EncryptedOTP)
+        OTP = cipher.decrypt(EncryptedOTP,"failed")
+        print (OTP)
   
