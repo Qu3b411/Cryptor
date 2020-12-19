@@ -72,7 +72,6 @@ if( CryptImport ) {
     BCRYPT_ALG_HANDLE alg;
     CERT_PUBLIC_KEY_INFO *PubKeyInfo;
     DWORD PubKeyInfoLen;
-    BCRYPT_KEY_HANDLE hkey;
     BYTE* recvData;
     /*HCRYPTPROV hProvRSA = 0;
     HCRYPTKEY hKeyRSA = 0;*/
