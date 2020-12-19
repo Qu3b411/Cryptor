@@ -34,7 +34,7 @@ def config():
                 LogPrompt("Chose a security level\n\t\t\t\t 1 - RSA 2048 / AES 128\n\t\t\t\t 2 - RSA 3072 / AES 192 \n\t\t\t\t 3 - RSA 4096 / AES 256")
                 securityLevel = 0;
                 while securityLevel < 1 or securityLevel > 3:
-                    securityLevel = int(input("\t"+os.path.basename(__file__)+">>\tEnter Security Level:" ))
+                    securityLevel = int(input("\t"+os.path.basename(__file__)+">>\tEnter Security Level: " ))
                 
                 if securityLevel == 1: 
                     LogPrompt("AES key length written to (Conf), 128 bit (16 bytes)");

@@ -69,10 +69,16 @@ def PrintIV():
     print("\"");
 
 GenNewKeys = "";
-while GenNewKeys != "y":
-    GenNewKeys = str(input("Do you wish to generate new keys? (NOTE: Required for first run) [Y/N] ").lower().strip())
-    if GenNewKeys == 'n':
-        sys.exit()
+try:
+    with open("./SVR_SRC/C2.py") as f:
+        with open("./CL_src/Cryptor.h") as f1:
+                print("",end="") #preform no action    
+    while GenNewKeys != "y":
+        GenNewKeys = str(input("Do you wish to generate new keys? (NOTE: Required for first run) [Y/N] ").lower().strip())
+        if GenNewKeys == 'n':
+           sys.exit()
+except IOError:
+    LogPrompt("Generating Conf");
 
 try:
     with open ('Conf', 'r') as f:
