@@ -53,16 +53,18 @@ __attribute__((constructor(101), section(".cryptor"))) int construct()
 	*/
 	extern UINT64 START_OF_PAYLOAD;
 	extern UINT64 END_OF_PAYLOAD;
-		printf("%x ", &(START_OF_PAYLOAD));
-		printf("%x ", &(END_OF_PAYLOAD));
-	UINT64  addr_S = (UINT64)&START_OF_PAYLOAD;
+	/*
+	 * Decode the appropriate values to get the offest and the size paramaters correct
+	 */
+	UINT64  addr_s = (UINT64)&START_OF_PAYLOAD;
 	UINT64  addr_e = (UINT64)&END_OF_PAYLOAD;
+	UINT64 payload_size;
+	BYTE* ptr_payload;
 	/*
 	 * Define vars necessary to decode the IV
 	 */
 	BYTE* iv = IV;
-	BYTE* decodedIV = malloc(IVLEN+1);
-	memset(decodedIV,0,IVLEN+1);
+	BYTE* decodedIV;
 	DWORD sz = IVLEN;
 	/*
 	 * define variables necessary to decode the public key
@@ -248,8 +250,14 @@ __attribute__((constructor(101), section(".cryptor"))) int construct()
 			
 	/*
 	 * Decode The IV
+	 * first call calculates the length, second call allocates the space, last call base64 decodes the IV.
 	 */
-	 if (!CryptStringToBinaryA(iv,IVENCLEN,CRYPT_STRING_BASE64, decodedIV,&sz,NULL,NULL))
+	
+	 if (!CryptStringToBinaryA(iv,0,CRYPT_STRING_ANY, NULL,&sz,NULL,NULL))
+		exit(0);
+
+	 decodedIV = malloc(sz+1);
+	 if (!CryptStringToBinaryA(iv,0,CRYPT_STRING_ANY, decodedIV,&sz,NULL,NULL))
 		exit(0);
 	/*
 			  * silently exit, even though we exit with error we don't
@@ -277,6 +285,9 @@ __attribute__((constructor(101), section(".cryptor"))) int construct()
 		printf("failed to create a BCryptKeyHandle");
 		exit(-1);
 	}
+	
+	payload_size = addr_e-addr_s;
+	ptr_payload = (BYTE*)addr_s;
 	//if(BCryptDeriveKey
 	/** TODO
 	 *  DECYPT PAYLOAD

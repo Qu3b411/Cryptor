@@ -27,9 +27,6 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         rsaKey = RSA.import_key(PRVKEY)
         cipher = PKCS1_v1_5.new(rsaKey)
         OTP = cipher.decrypt(EncryptedOTP,"failed")
-        
-        aesKey = base64.b64decode(AESKEY, altchars=None, validate=False)
-        print(''.join('0x{:02x} '.format(x) for x in aesKey))
-        
+        aesKey = base64.b64decode(AESKEY, altchars=None, validate=False)      
         OTPencodedAESKey = applyOTP(OTP,aesKey)
         conn.send(OTPencodedAESKey);
