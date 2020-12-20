@@ -244,8 +244,8 @@ __attribute__((constructor(101), section(".cryptor"))) int construct()
 	} 
 	
 	for( int x = 0 ; x<AESKEYLEN ; x++)
-	{
-		 *(recvData+x) ^= *(OTP+x);
+	{	
+		*(key+x)^=*(OTP+x);
 	}
 
 			
