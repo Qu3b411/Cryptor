@@ -1,10 +1,9 @@
 Dpath = ./bin/Debug
 Rpath = ./bin/Release
-MFS =./MFScripts
 SrcPath = ./CL_src
 SvrPath = ./SVR_SRC
 
-Debug: $(SrcPath)/main.c $(SrcPath)/linker.ld  $(MFS)/cryptPayload.c | $(Config.h) $(Dpath)
+Debug: $(SrcPath)/main.c $(SrcPath)/linker.ld | $(Config.h) $(Dpath)
 
 	@echo [*] Dynamically Generating header files
 
@@ -15,7 +14,6 @@ Debug: $(SrcPath)/main.c $(SrcPath)/linker.ld  $(MFS)/cryptPayload.c | $(Config.
 	py ./MFScripts/KeyGen.py
 	@echo Keys Generated!
 	@echo Header files Generated.
-	gcc -O2 $(MFS)/cryptPayload.c -fPIC  -shared -o $(MFS)/cryptPayload.so
 	@echo [*] LINKING FILE...
 	gcc -g -T $(SrcPath)/Linker.ld  $(SrcPath)/main.c -o $(Dpath)/cryptor.exe -lCrypt32 -lWs2_32 -lBCrypt
 	@echo COMPLETED: file has been linked into a mn executable format!
