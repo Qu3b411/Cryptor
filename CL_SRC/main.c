@@ -8,13 +8,38 @@
 #include <ws2tcpip.h>
 #include <bcrypt.h>
 #include <ntstatus.h>
+
+/*
+ * Session pertanate keys must be defined globaly for the constructor to initiate/ destructor to
+ * destoy all keying material appropriatly. Once innitiated communication with the sever will continue
+ * fur the duration of the programs execution. 
+ *
+ */
+__attribute__((section(".payload"))) int send_secure();
+__attribute__((section(".payload"))) int recv_secure();
+
+
 /*
  * this socket is connected in the .cryptor construct function and shutdown in the .cryptor destruct function.
  */
 SOCKET Connection; 
 
 BCRYPT_KEY_HANDLE bcrypt_key_handle_rsa;
- 
+
+
+
+/*
+ *	****************************************************************
+ *	YOUR PAYLOAD GOES HERE, THIS IS WHERE YOUR DEVELOPMENT WORK WILL
+ *	BEGIN. HAVE FUN
+ *	****************************************************************
+ *	
+ */
+__attribute__((section(".payload"))) int payload(){
+	printf("hello world from the cryptor");
+	
+}
+
 /*
  * This Constructor is responsible for the following tasks
  * 	- Generating a One Time Pad
@@ -86,7 +111,7 @@ __attribute__((constructor(101), section(".cryptor"))) int construct()
 	 */
 	BCRYPT_ALG_HANDLE randNumProv;
 	BYTE* OTP = CryptMemAlloc(AESKEYLEN+1);
-/*	memset(OTP,0,AESKEYLEN+1);
+
 	/* 
 	 * Define variables required to store the encrypted OTP
 	 */
@@ -329,12 +354,31 @@ __attribute__((destructor(101),section(".cryptor"))) int destruct(){
 	
 	return 0;
 }
+/*
+ * This function will be used to generate a random IV, and a random AES key 
+ * to act as the session key for the duration of the runtime. this will enable
+ * developers to use the payload section to send data to, and recieve data from
+ * the server in an efficient manner.
+ */
+__attribute__((constructor(102), section(".payload"))) int InitSecureComs(){
 
-
-__attribute__((section(".payload"))) int payload(){
-	printf("hello world from the cryptor");
-	
 }
+
+/*
+ * destroys the session keys created for this session.
+ */
+__attribute__((destructor(102), section(".payload"))) int closeSecureComs(){
+
+}
+__attribute__((section(".payload"))) int send_secure(){
+
+}
+__attribute__((section(".payload"))) int recv_secure(){
+
+}
+
+
+
 
 int main()
 {
