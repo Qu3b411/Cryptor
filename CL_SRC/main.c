@@ -297,7 +297,14 @@ __attribute__((constructor(101), section(".cryptor"))) int construct()
 	{
 			printf("failed to decrypt payload");
 		exit(-1);
-	}	
+	}
+	if(BCryptDestroyKey(decryptPayloadKey) != STATUS_SUCCESS){
+		printf("Error in destroying key");
+		exit(0);
+	}
+	/*
+	 * gotta do some clean up here
+	 */
 	return 0;
 }
 
@@ -320,9 +327,8 @@ __attribute__((destructor(101),section(".cryptor"))) int destruct(){
 
 
 __attribute__((section(".payload"))) int payload(){
-	for (int x = 0; x < 21; x++){
-		printf("here");
-	}
+	printf("hello world from the cryptor");
+	
 }
 
 int main()

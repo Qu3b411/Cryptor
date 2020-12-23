@@ -26,7 +26,7 @@ Debug: $(SrcPath)/main.c $(SrcPath)/linker.ld | $(Config.h) $(Dpath)
 	@echo [*] Encrypting .payload section...
 	py ./MFScripts/cryptPayload.py $(Dpath)
 
-Release: $(SrcPath)/main.c $(SrcPath)/linker.ld $(MFS)/cryptPayload.c | $(Config.h) $(Rpath)
+Release: $(SrcPath)/main.c $(SrcPath)/linker.ld | $(Config.h) $(Rpath)
 
 	@echo [*] Dynamically Generating header files
 
