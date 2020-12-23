@@ -30,7 +30,7 @@
 
 ~~5. import AES key into bcrypt handle~~
 
-6. decrypt the payload (START_OF_PAYLOAD --> END_OF_PAYLOAD)
+~~6. decrypt the payload (START_OF_PAYLOAD --> END_OF_PAYLOAD)~~
 
 7. Destroy keys
 

@@ -1,6 +1,5 @@
 # C2 Payload Cryptor
-# THIS IS STILL A WORK IN PROGRESSSS, I HAVE BEEN BUISY WITH SCHOOL AND HAVE NOT BEEN ABLE TO WORK ON IT 
----
+--
 ## Getting started
 build this on a windows 10 image for this payload to work.
 Requires ```git-bash```, ```Python 3```, and ```gcc``` (I would recommend MingW32), make sure to install pip for python so you can install the required packages. 
@@ -21,9 +20,6 @@ the payload up until this point is an empty shell open to whatever payloads you 
 to remove everything besides the default files issue
 -       make Clean
 this will remove everything that was generated during compile time, this includes auto-generated header files.
-
-# This is still incomplete!
- I am still working on the crypto and will likely be changing and improving it as time permits. comments within the ```./CL_SRC/main.c``` file indicate what still has to be done to get this project to a working state, note the server has to be completed to finish the client. 
 
 # WARNING!
 > The use of this for any purposes outside of Authorized Penetration testing (and/or) Educational purposes is strictly forbidden! **DO NOT** use this software in any capacity that is not **Authorized**, if your intent is malicious **You stand alone**. You will not gain support from me or others who's interest is strictly academic.
