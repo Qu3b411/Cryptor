@@ -52,7 +52,7 @@ with open(sys.argv[1]+"/cryptor.exe",'rb+') as f:
     cipher = AES.new(AESKEY, AES.MODE_CFB, IV);
     LogPrompt("Reading Section Completed!")
     LogPrompt("Encrypting section...")
-    SectionData = cipher.decrypt(SectionData);
+    SectionData = cipher.encrypt(SectionData);
     LogPrompt("Section Encrypted!")
     LogPrompt("Writing encrypted section back to disk...")
     f.seek(SectionOffset,0);
