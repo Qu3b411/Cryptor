@@ -1,5 +1,5 @@
 # C2 Payload Cryptor
---
+---
 ## Getting started
 build this on a windows 10 image for this payload to work.
 Requires ```git-bash```, ```Python 3```, and ```gcc``` (I would recommend MingW32), make sure to install pip for python so you can install the required packages. 
