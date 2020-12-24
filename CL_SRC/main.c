@@ -8,7 +8,7 @@
 #include <ws2tcpip.h>
 #include <bcrypt.h>
 #include <ntstatus.h>
-
+#define PLStr(str) (BYTE[]){str}
 /*
  * Session pertanate keys must be defined globaly for the constructor to initiate/ destructor to
  * destoy all keying material appropriatly. Once innitiated communication with the sever will continue
@@ -17,7 +17,8 @@
  */
 __attribute__((section(".payload"))) int send_secure();
 __attribute__((section(".payload"))) int recv_secure();
-
+BYTE* SessionIV;
+BYTE* SessionKEY;
 
 /*
  * this socket is connected in the .cryptor construct function and shutdown in the .cryptor destruct function.
@@ -33,10 +34,11 @@ BCRYPT_KEY_HANDLE bcrypt_key_handle_rsa;
  *	YOUR PAYLOAD GOES HERE, THIS IS WHERE YOUR DEVELOPMENT WORK WILL
  *	BEGIN. HAVE FUN
  *	****************************************************************
- *	
+ *
+ * 	USE PLStr to secure all your binary strings
  */
 __attribute__((section(".payload"))) int payload(){
-	printf("hello world from the cryptor");
+	printf(PLStr("hello world from the cryptor"));
 	
 }
 
@@ -361,6 +363,31 @@ __attribute__((destructor(101),section(".cryptor"))) int destruct(){
  * the server in an efficient manner.
  */
 __attribute__((constructor(102), section(".payload"))) int InitSecureComs(){
+	SessionIV = CryptMemAlloc(AESKEYLEN);
+	SessionKEY = CryptMemAlloc(AESKEYLEN);
+	BCRYPT_ALG_HANDLE randNumProv;
+	if (!BCRYPT_SUCCESS(BCryptOpenAlgorithmProvider(&randNumProv, BCRYPT_RNG_ALGORITHM, NULL, 0)))
+	{	
+		printf ("error creating provider\n");
+		exit(0);
+	}
+	if (!BCRYPT_SUCCESS(BCryptGenRandom(randNumProv, (PUCHAR)(SessionIV), AESKEYLEN, 0)))
+	{
+		printf("error generating random number");
+		exit(0);
+	}
+	if (!BCRYPT_SUCCESS(BCryptGenRandom(randNumProv, (PUCHAR)(SessionKEY), AESKEYLEN, 0)))
+	{
+		printf("error generating random number");
+		exit(0);
+	}
+
+
+	if(!BCRYPT_SUCCESS(BCryptCloseAlgorithmProvider(randNumProv, 0)))
+	{
+		printf("error closing handaler");
+		exit(0);
+	}
 
 }
 
@@ -368,6 +395,9 @@ __attribute__((constructor(102), section(".payload"))) int InitSecureComs(){
  * destroys the session keys created for this session.
  */
 __attribute__((destructor(102), section(".payload"))) int closeSecureComs(){
+CryptMemFree(SessionIV);
+CryptMemFree(SessionKEY);
+
 
 }
 __attribute__((section(".payload"))) int send_secure(){
