@@ -47,7 +47,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         if(conn.send(b"\x01") != 1):
             print("An error has occured in this connection before the EncryptedOTP could be recieved");
             sys.exit(-1)
-        SessionIV = conn.recv(AESKEYLEN);
+        SessionIV = conn.recv(16);
         if(conn.send(b"\x01") != 1):
             print("An error has occured in this connection before the EncryptedOTP could be recieved");
             sys.exit(-1)
@@ -68,9 +68,9 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             if(conn.send(b"\x01") != 1):
                 print("An error has occured in this connection before the EncryptedOTP could be recieved")
                 sys.exit(-1)    
-            plaintext = sessionCipher.decrypt(MSG[AESKEYLEN:])
+            plaintext = sessionCipher.decrypt(MSG[16:])
             print (str(plaintext))
-            SessionIV = MSG[:AESKEYLEN]
+            SessionIV = MSG[:16]
             
         ######################################################################################
         ######################################################################################

