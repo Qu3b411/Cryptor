@@ -7,6 +7,7 @@ from C2 import *;
 import sys
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_v1_5
+from Crypto.Cipher import AES
 import socket
 import base64
 
@@ -46,11 +47,31 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         if(conn.send(b"\x01") != 1):
             print("An error has occured in this connection before the EncryptedOTP could be recieved");
             sys.exit(-1)
+        SessionIV = conn.recv(AESKEYLEN);
+        if(conn.send(b"\x01") != 1):
+            print("An error has occured in this connection before the EncryptedOTP could be recieved");
+            sys.exit(-1)
+#        sessionCipher = AES.new(SessionKey, AES.MODE_CFB, SessionIV)
         def secure_send():
             print ("send data")
 
         def secure_recv():
-            print ("recv data") 
+            global SessionIV
+            sessionCipher = AES.new(SessionKey, AES.MODE_CFB, SessionIV)
+            msgSZ = int.from_bytes(conn.recv(8),byteorder='big',signed=False) 
+            #print(str(msgSZ))
+            #print ("".join("0x%02x " % b for b in sessionCipher.IV))
+            if(conn.send(b"\x01") != 1):
+                print("An error has occured in this connection before the EncryptedOTP could be recieved")
+                sys.exit(-1)
+            MSG = conn.recv(msgSZ)
+            if(conn.send(b"\x01") != 1):
+                print("An error has occured in this connection before the EncryptedOTP could be recieved")
+                sys.exit(-1)    
+            plaintext = sessionCipher.decrypt(MSG[AESKEYLEN:])
+            print (str(plaintext))
+            SessionIV = MSG[:AESKEYLEN]
+            
         ######################################################################################
         ######################################################################################
         #               END CONFIGURATION ITEMS FOR SERVER FUCTIONALITY                      #
@@ -59,6 +80,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         #               BEGIN SERVER/CLIENT COMMUNICATION ROUTINE                            #
         ######################################################################################
         ######################################################################################
-
-
+        secure_recv()
+        secure_recv()
+        secure_recv()
 

