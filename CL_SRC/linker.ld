@@ -17,7 +17,7 @@ SECTIONS
      KEEP(*(.init))
     *(.text)
     *(SORT(.text$*))
-     *(.text.*)
+    *(.text.*)
      *(.gnu.linkonce.t.*)
     *(.glue_7t)
     *(.glue_7)
@@ -64,6 +64,8 @@ SECTIONS
   .payload BLOCK(__section_alignment__) : {
     START_OF_PAYLOAD = . ;
     *(.payload)
+ 
+  
     . = ALIGN(0x200); /*minimum size of a section*/
     END_OF_PAYLOAD = . ;
   }

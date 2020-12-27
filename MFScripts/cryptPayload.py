@@ -27,7 +27,6 @@ with open("./SVR_SRC/c2.py","r") as f:
             LogPrompt("Base64 Decoding IV...")
             IV = base64.b64decode(r2.group(1));
             LogPrompt("IV Retrieved and decoded!")
-            print(IV);
 
 LogPrompt("Closing C2.py!")
 LogPrompt("Locating Section Attributes")
@@ -48,7 +47,6 @@ with open(sys.argv[1]+"/cryptor.exe",'rb+') as f:
     LogPrompt("Section located!");
     LogPrompt("Reading in .payload section...");
     SectionData = f.read(SectionSize);
-    print(AESKEY)
     cipher = AES.new(AESKEY, AES.MODE_CFB, IV);
     LogPrompt("Reading Section Completed!")
     LogPrompt("Encrypting section...")

