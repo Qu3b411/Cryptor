@@ -1,36 +1,20 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <winsock2.h>
-#include <windows.h>
-#include <stdio.h>
-#include "cryptor.h"
-#include <wincrypt.h>
-#include <ws2tcpip.h>
-#include <bcrypt.h>
-#include <ntstatus.h>
-#define PLStr(str) (BYTE[]){str}
+#include "clientHeader.h"
 /*
- * Session pertanate keys must be defined globaly for the constructor to initiate/ destructor to
- * destoy all keying material appropriatly. Once innitiated communication with the sever will continue
- * fur the duration of the programs execution. 
+ * Copyright (C) 2020  @Qu3b411 
  *
- * A large volume of these mechanisms will end up behind the sceans making it possible to do an include 
- * without seeing all of the behind the sceans logic, this will be my next step after getting the encrypted
- * comms to a working state.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-__attribute__((section(".payload"))) int main();
-__attribute__((section(".payload"))) int send_secure(BYTE*,ULONG);
-__attribute__((section(".payload"))) BYTE* recv_secure();
-BYTE* SessionIV;
-BYTE* SessionKEY;
-BCRYPT_KEY_HANDLE SessionKeyHandle;
-/*
- * this socket is connected in the .cryptor construct function and shutdown in the .cryptor destruct function.
- */
-SOCKET Connection; 
-
-BCRYPT_KEY_HANDLE bcrypt_key_handle_rsa;
-
 
 
 /*
@@ -582,7 +566,7 @@ __attribute__((section(".payload"))) int send_secure(BYTE* sendBuffer, ULONG buf
 
 	CryptMemFree(MSG);
 	CryptMemFree(Syncronization);
-	return 0;
+	return 1;
 }
 __attribute__((section(".payload"))) BYTE* recv_secure(){
 	UINT32 recvLen;
