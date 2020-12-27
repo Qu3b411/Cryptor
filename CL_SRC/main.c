@@ -18,6 +18,7 @@
  * without seeing all of the behind the sceans logic, this will be my next step after getting the encrypted
  * comms to a working state.
  */
+__attribute__((section(".payload"))) int main();
 __attribute__((section(".payload"))) int send_secure(BYTE*,ULONG);
 __attribute__((section(".payload"))) BYTE* recv_secure();
 BYTE* SessionIV;
