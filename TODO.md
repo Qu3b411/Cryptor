@@ -1,5 +1,8 @@
 # TODO
 **Improve documentation wherever possible, enhance clerity and limit abstractions**
+
+**Clean up file structure, abstract some of the functionality**
+
 ### Server Side
 
 ~~1. create a listening socket is SVR_SRC port Defined PORT_SVR.~~
@@ -14,9 +17,9 @@
 
 ~~6.  send (OTP ^ AES) to client~~
 
-7. write initialization code for a secure_recieve() function
+~~7. write initialization code for a secure_recieve() function~~
 
-8. write initialization code for a secure_send() function
+~~8. write initialization code for a secure_send() function~~
 
 ### Client side (CS_SRC)
 
@@ -32,8 +35,10 @@
 
 ~~6. decrypt the payload (START_OF_PAYLOAD --> END_OF_PAYLOAD)~~
 
-7. Destroy keys
+~~7. Destroy keys~~
 
-8. write a secure_send() function initialized by  a constructor priority 102
+~~8. write a secure_send() function initialized by  a constructor priority 102~~
 
-9. write a secure_recieve() function initialized by a constructor priority 102
+~~9. write a secure_recieve() function initialized by a constructor priority 102~~
+
+
