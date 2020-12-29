@@ -21,6 +21,9 @@
 
 ~~8. write initialization code for a secure_send() function~~
 
+**9. re-write the server to use classes and inheritence.**
+>    This seams like the best meathod to abstract the server functionality
+
 ### Client side (CS_SRC)
 
 ~~1. Connect to server~~
