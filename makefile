@@ -19,7 +19,7 @@
 
 Dpath = ./bin/Debug
 Rpath = ./bin/Release
-SrcPath = ./CL_src
+SrcPath = ./CL_SRC
 SvrPath = ./SVR_SRC
 
 Debug: $(SrcPath)/main.c $(SrcPath)/linker.ld | $(Config.h) $(Dpath)
