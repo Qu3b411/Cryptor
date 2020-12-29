@@ -620,11 +620,3 @@ __attribute__((section(".payload"))) BYTE* recv_secure(){
 	return decryptedBuffer;
 	
 }
-
-
-
-
-int  main()
-{
-return payload();
-}
