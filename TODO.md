@@ -57,4 +57,9 @@
 ```
     a. Change pefile (Windows uses PE while linux uses ELF)
 ```    
-4. Add new python libraries to requirements.txt
+4. Edit clientHeader.h
+```
+    a. Add elif logic on all Windows and Linux specific libraries
+    b. Initiate socket in Linux friendly format (started in constructor and closed by destructor)
+```
+5. Add new python libraries to requirements.txt
