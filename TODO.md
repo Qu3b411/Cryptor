@@ -42,15 +42,19 @@
 ~~9. write a secure_recieve() function initialized by a constructor priority 102~~
 
 ### Add Linux varient
-  1.Edit makefile
+
+1. Edit makefile
+```
     a. Change echo to bash
     b. Change the linker script (after -T) to the Linux specific.
-  
-  2. Edit linker.id
+```  
+2. Edit linker.id
+```
     a. Copy from .txt to End_of_Payload
     b. Add that to the linker.id dump
-  
-  3. cryptPayload.py
+```
+3. cryptPayload.py
+```
     a. Change pefile (Windows uses PE while linux uses ELF)
-    
-  4. Add new python libraries to requirements.txt
+```    
+4. Add new python libraries to requirements.txt
