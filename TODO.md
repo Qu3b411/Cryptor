@@ -1,5 +1,8 @@
 # TODO
 **Improve documentation wherever possible, enhance clerity and limit abstractions**
+
+**Clean up file structure, abstract some of the functionality**
+
 ### Server Side
 
 ~~1. create a listening socket is SVR_SRC port Defined PORT_SVR.~~
@@ -14,9 +17,9 @@
 
 ~~6.  send (OTP ^ AES) to client~~
 
-7. write initialization code for a secure_recieve() function
+~~7. write initialization code for a secure_recieve() function~~
 
-8. write initialization code for a secure_send() function
+~~8. write initialization code for a secure_send() function~~
 
 ### Client side (CS_SRC)
 
@@ -32,8 +35,31 @@
 
 ~~6. decrypt the payload (START_OF_PAYLOAD --> END_OF_PAYLOAD)~~
 
-7. Destroy keys
+~~7. Destroy keys~~
 
-8. write a secure_send() function initialized by  a constructor priority 102
+~~8. write a secure_send() function initialized by  a constructor priority 102~~
 
-9. write a secure_recieve() function initialized by a constructor priority 102
+~~9. write a secure_recieve() function initialized by a constructor priority 102~~
+
+### Add Linux varient
+
+1. Edit makefile
+```
+    a. Change echo to bash
+    b. Change the linker script (after -T) to the Linux specific.
+```  
+2. Edit linker.id
+```
+    a. Copy from .txt to End_of_Payload
+    b. Add that to the linker.id dump
+```
+3. cryptPayload.py
+```
+    a. Change pefile (Windows uses PE while linux uses ELF)
+```    
+4. Edit clientHeader.h
+```
+    a. Add elif logic on all Windows and Linux specific libraries
+    b. Initiate socket in Linux friendly format (started in constructor and closed by destructor)
+```
+5. Add new python libraries to requirements.txt
