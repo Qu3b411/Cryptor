@@ -27,6 +27,8 @@ Debug: $(SrcPath)/main.c $(SrcPath)/linker.ld | $(Dpath)
 
 	@echo [*] Dynamically Generating header files
 
+	@echo [*] Installing Python requirements
+	python3 install.py
 	@echo [*] Checking Config File for server requirements. This may require configration!
 	python3 ./MFScripts/config.py
 	@echo Config file found at expected location!
@@ -54,6 +56,8 @@ Release: $(SrcPath)/main.c $(SrcPath)/linker.ld | $(Rpath)
 
 	@echo [*] Dynamically Generating header files
 
+	@echo [*] Installing Python requirements
+	python3 install.py
 	@echo [*] Checking Config File for server requirements. This may require configration!
 	python3 ./MFScripts/config.py
 	@echo Config file found at expected location!
