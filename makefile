@@ -28,7 +28,7 @@ Debug: $(SrcPath)/main.c $(SrcPath)/win32Linker.ld $(SrcPath)/linuxLinker.ld |  
 ifeq ($(OS),Windows_NT)
 	@echo [*] Dynamically Generating header files
 	@echo [*] Installing Python requirements
-	@py -3 install.py
+	@py -3 ./MFScripts/nstall.py
 	@echo [*] Checking Config File for server requirements. This may require configration!
 	@py -3 ./MFScripts/config.py
 	@echo Config file found at expected location!
@@ -55,7 +55,7 @@ ifeq ($(OS),Windows_NT)
 else
 	@echo [*] Dynamically Generating header files
 	@echo [*] Installing Python requirements
-	@python3 install.py
+	@python3 ./MFScripts/nstall.py
 	@echo [*] Checking Config File for server requirements. This may require configration!
 	@python3 ./MFScripts/config.py
 	@echo Config file found at expected location!
@@ -84,7 +84,7 @@ ifeq ($(OS),Windows_NT)
 	@echo [*] Dynamically Generating header files
 
 	@echo [*] Installing Python requirements
-	@py -3 install.py
+	@py -3 ./MFScripts/install.py
 	@echo [*] Checking Config File for server requirements. This may require configration!
 	@py -3 ./MFScripts/config.py
 	@echo Config file found at expected location!
@@ -113,7 +113,7 @@ else
 	@echo [*] Dynamically Generating header files
 
 	@echo [*] Installing Python requirements
-	@python3 install.py
+	@python3  ./MFScripts/install.py
 	@echo [*] Checking Config File for server requirements. This may require configration!
 	@python3 ./MFScripts/config.py
 	@echo Config file found at expected location!
