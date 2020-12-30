@@ -1,5 +1,5 @@
 # TODO
-**Improve documentation wherever possible, enhance clerity and limit abstractions**
+**Improve documentation wherever possible, enhance clerity**
 
 **Clean up file structure, abstract some of the functionality**
 
