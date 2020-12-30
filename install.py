@@ -1,4 +1,5 @@
-import pip
+import subprocess
+import sys
 
 _all_ = [
         "pycryptodomex"
@@ -12,18 +13,17 @@ linux = [""]
 #Any MacOS specific packages
 darwin = [""]
 
-#This defines the peramiters for pip
 def install(packages):
     for package in packages:
-        pip.main(['install', package])
+        print("\t[*]",end='')
+        subprocess.check_call([sys.executable, "-m", "pip", "install", package])
 
 #Install all packages, then move to logic for OS specific packages
 if __name__ == '__main__':
 
     from sys import platform
-
     install(_all_) 
-    if platform == 'windows':
+    if platform == 'win32':
         install(windows)
     if platform.startswith('linux'):
         install(linux)

