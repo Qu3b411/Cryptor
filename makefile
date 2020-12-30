@@ -28,14 +28,13 @@ Debug: $(SrcPath)/main.c $(SrcPath)/linker.ld | $(Dpath)
 	@echo [*] Dynamically Generating header files
 
 	@echo [*] Checking Config File for server requirements. This may require configration!
-	py ./MFScripts/config.py
+	python ./MFScripts/config.py
 	@echo Config file found at expected location!
 	@echo [*] Generating keys...
-	py ./MFScripts/KeyGen.py
+	python ./MFScripts/KeyGen.py
 	@echo Keys Generated!
 	@echo Header files Generated.
 	@echo [*] LINKING FILE...
-	# 
 	# We are going to use a sub directory and make both objects
 	gcc -c  $(SrcPath)/main.c  -o $(Dpath)/cryptor.o 
 	gcc -c  ./payload/$(Payload)/*.c  -o $(Dpath)/payload.o $(INC)
@@ -49,17 +48,17 @@ Debug: $(SrcPath)/main.c $(SrcPath)/linker.ld | $(Dpath)
 	@echo COMPLETED, .payload section is now writable
 
 	@echo [*] Encrypting .payload section...
-	py ./MFScripts/cryptPayload.py $(Dpath)
+	python ./MFScripts/cryptPayload.py $(Dpath)
 
 Release: $(SrcPath)/main.c $(SrcPath)/linker.ld | $(Rpath)
 
 	@echo [*] Dynamically Generating header files
 
 	@echo [*] Checking Config File for server requirements. This may require configration!
-	py ./MFScripts/config.py
+	python ./MFScripts/config.py
 	@echo Config file found at expected location!
 	@echo [*] Generating keys...
-	py ./MFScripts/KeyGen.py
+	python ./MFScripts/KeyGen.py
 	@echo Keys Generated!
 	@echo Header files Generated.
 
@@ -78,7 +77,7 @@ Release: $(SrcPath)/main.c $(SrcPath)/linker.ld | $(Rpath)
 	@echo COMPLETED, .payload section is now writable
 
 	@echo [*] Encrypting .payload section...
-	py ./MFScripts/cryptPayload.py $(Rpath)
+	python ./MFScripts/cryptPayload.py $(Rpath)
 
 Clean:
 	@echo Cleanning all generated files and directories
@@ -93,7 +92,7 @@ Clean:
 Conf:
 	@echo Removing current Conf file
 	rm -f ./conf
-	py ./MFScripts/config.py
+	python ./MFScripts/config.py
 
 $(Dpath):
 	mkdir -p $(Dpath)
