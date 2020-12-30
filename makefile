@@ -22,8 +22,8 @@ Rpath = ./bin/Release
 SrcPath = ./CL_SRC
 SvrPath = ./SVR_SRC
 Payload?= ./
-INC=-I./CL_src
-Debug: $(SrcPath)/main.c $(SrcPath)/win32Linker.ld | $(Dpath)
+INC=-I./CL_SRC
+Debug: $(SrcPath)/main.c $(SrcPath)/win32Linker.ld $(SrcPath)/linuxLinker.ld |  $(Dpath)
 
 ifeq ($(OS),Windows_NT)
 	@echo [*] Dynamically Generating header files
@@ -67,7 +67,7 @@ else
 	@# We are going to use a sub directory and make both objects
 	gcc -c  $(SrcPath)/main.c  -o $(Dpath)/cryptor.o 
 	gcc -c  ./payload/$(Payload)/*.c  -o $(Dpath)/payload.o $(INC)
-	gcc -g -T $(SrcPath)/linker.ld   $(Dpath)/cryptor.o $(Dpath)/payload.o -o $(Dpath)/cryptor.exe -lCrypt32 -lWs2_32 -lBCrypt
+	gcc -g -T $(SrcPath)/linuxLinker.ld  $(Dpath)/cryptor.o $(Dpath)/payload.o -o $(Dpath)/cryptor.exe 
 	
 	@echo COMPLETED: file has been linked into a mn executable format!
 	@echo [*] REMOVING READONLY PROTECTION FROM .payload...
@@ -78,7 +78,7 @@ else
 	@python3 ./MFScripts/cryptPayload.py $(Dpath)
 endif
 
-Release: $(SrcPath)/main.c $(SrcPath)/win32linker.ld | $(Rpath)
+Release: $(SrcPath)/main.c $(SrcPath)/win32linker.ld $(SrcPath)/linuxLinker.ld | $(Rpath)
 
 ifeq ($(OS),Windows_NT)
 	@echo [*] Dynamically Generating header files
@@ -127,7 +127,7 @@ else
 	gcc -c  $(SrcPath)/main.c  -o $(Rpath)/cryptor.o
 	gcc -c  ./payload/$(Payload)/*.c  -o $(Rpath)/payload.o $(INC)
 	
-	gcc -s -static -mwindows -fvisibility=hidden -T $(SrcPath)/linker.ld  $(Rpath)/cryptor.o $(Rpath)/payload.o -o $(Rpath)/cryptor.exe -lCrypt32 -lWs2_32 -lBCrypt
+	gcc -s -static -mwindows -fvisibility=hidden -T $(SrcPath)/linuxLinker.ld   $(Rpath)/cryptor.o $(Rpath)/payload.o -o $(Rpath)/cryptor.exe
 	@echo COMPLETED: file has been linked into a mn executable format!
 	strip -R .comment -R .note $(Rpath)/cryptor.exe
 	strip -s $(Rpath)/cryptor.exe

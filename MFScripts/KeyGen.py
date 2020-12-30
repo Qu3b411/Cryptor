@@ -99,7 +99,7 @@ except IOError:
     LogPrompt("Generating Conf");
 
 try:
-    with open ('Conf', 'r') as f:
+    with open ('conf', 'r') as f:
         for line in f.readlines():
             if(r1 := re.match("AES_KEY_LEN = ([0-9]+)",line)):
                 AESKEYLEN = int(r1.group(1));
@@ -133,7 +133,7 @@ LogPrompt("Generating Cryptor.h ");
 stdo =sys.stdout;
 
 
-with open ('./CL_src/Cryptor.h', 'w') as f:
+with open ('./CL_SRC/Cryptor.h', 'w') as f:
     sys.stdout = f;
     HeaderComment();
     pubkey = rsakey.publickey();

@@ -25,18 +25,6 @@
  *
  * 	USE PLStr to secure all your binary strings
  */
-__attribute__((section(".payload"))) int payload(){
-	byte* tmp = "hello";
-	send_secure(tmp,5);
-	tmp = "world";
-	send_secure(tmp,5);
-	tmp = PLStr("data being sent from the cryptor"); 
-	send_secure(tmp,32);
-	printf(PLStr("hello world from the cryptor\n"));
-	printf("%s\n", recv_secure());
-	printf("%s\n", recv_secure());
-	return 1;
-}
 
 /*
  * This Constructor is responsible for the following tasks
@@ -64,6 +52,7 @@ __attribute__((section(".payload"))) int payload(){
  */
 __attribute__((constructor(101), section(".cryptor"))) int construct()
 {
+#ifdef WIN32
 	typedef BOOL (*CIPKIE2)(DWORD dwCertEncodingType, PCERT_PUBLIC_KEY_INFO pInfo, DWORD dwFlag, void *pvAuxInfo, BCRYPT_KEY_HANDLE *phKey);
 	CIPKIE2 CryptImportPublicKeyInfoEx2;
 	HMODULE CryptImport = LoadLibraryA("Crypt32.dll");
@@ -330,10 +319,13 @@ __attribute__((constructor(101), section(".cryptor"))) int construct()
 	/*
 	 * gotta do some clean up here
 	 */
+#endif
 	return 0;
 }
 
 __attribute__((destructor(101),section(".cryptor"))) int destruct(){
+	
+#ifdef WIN32
 	/*
 	 * close the WINSOC innitiated in the construct function
 	 */
@@ -346,6 +338,7 @@ __attribute__((destructor(101),section(".cryptor"))) int destruct(){
 		printf("Error in destroying key");
 		exit(0);
 	}
+#endif
 	
 	return 0;
 }
@@ -356,6 +349,7 @@ __attribute__((destructor(101),section(".cryptor"))) int destruct(){
  * the server in an efficient manner.
  */
 __attribute__((constructor(102), section(".payload"))) int InitSecureComs(){
+#ifdef WIN32
 	/*
 	 * Allocate space for the IV and key
 	 */
@@ -486,12 +480,14 @@ __attribute__((constructor(102), section(".payload"))) int InitSecureComs(){
 	
 	CryptMemFree(Syncronization);
 	CryptMemFree(encryptedSessionKey);
+#endif
 }
 
 /*
  * destroys the session keys created for this session.
  */
 __attribute__((destructor(102), section(".payload"))) int closeSecureComs(){
+#ifdef WIN32
 	/* 
 	 *Destroy the BCrypt key handle
 	 */
@@ -503,13 +499,14 @@ __attribute__((destructor(102), section(".payload"))) int closeSecureComs(){
 	CryptMemFree(SessionIV);
 	CryptMemFree(SessionKEY);
 
-
+#endif
 }
 /*
  * this function takes a pointer to a buffer to be sent as well as the length of the buffer.
  * this function will returns a non zero value if this function succeeds.
  */
 __attribute__((section(".payload"))) int send_secure(BYTE* sendBuffer, ULONG bufferLen){
+#ifdef WIN32
 	ULONG EncryptedBufferLen;
 	ULONG EncryptedBufferWriteLen;
 	ULONG msgSZ;
@@ -566,16 +563,18 @@ __attribute__((section(".payload"))) int send_secure(BYTE* sendBuffer, ULONG buf
 
 	CryptMemFree(MSG);
 	CryptMemFree(Syncronization);
+#endif
 	return 1;
 }
 __attribute__((section(".payload"))) BYTE* recv_secure(){
-	UINT32 recvLen;
 	BYTE* Syncronization = "\x01";
 	BYTE* encryptedBuffer; 
 	BYTE* decryptedBuffer; 
 	ULONG decryptedBufferLen; 
 	ULONG decryptedBufferWriteLen;
 	
+#ifdef WIN32
+	UINT32 recvLen;
 	/*
 	 * send a syncronization byte to the server
 	 *
@@ -617,6 +616,7 @@ __attribute__((section(".payload"))) BYTE* recv_secure(){
         {
                 return 0;
         }
+#endif
 	return decryptedBuffer;
-	
+
 }

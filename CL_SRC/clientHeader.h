@@ -24,15 +24,20 @@
  */
 #include <stdio.h>
 #include <stdlib.h>
-#include <winsock2.h>
-#include <windows.h>
-#include <stdio.h>
-#include "cryptor.h"
-#include <wincrypt.h>
-#include <ws2tcpip.h>
-#include <bcrypt.h>
-#include <ntstatus.h>
+#ifdef WIN32
+	#include <winsock2.h>
+	#include <windows.h>
+	#include <wincrypt.h>
+	#include <ws2tcpip.h>
+	#include <bcrypt.h>
+	#include <ntstatus.h>
+#else
+	#define BYTE unsigned char
+	#define ULONG unsigned long
+#endif
 
+//#include <stdio.h>
+#include "Cryptor.h"
 /*
  * It is importatnt to the functionality of this program that all functionms
  * are declared with the appropriate attributes decorating them. the
@@ -90,11 +95,13 @@ __attribute__((section(".payload"))) BYTE* recv_secure();
  */
 BYTE* SessionIV;
 BYTE* SessionKEY;
-BCRYPT_KEY_HANDLE SessionKeyHandle;
-BCRYPT_KEY_HANDLE bcrypt_key_handle_rsa;
-/*
- * Similar to the keying material, the socket will remain open for the duration of the runtime, 
- * the socket is initiated in the constructore, and closed in the destructor 
- */
-SOCKET Connection; 
+#ifdef WIN32
 
+	BCRYPT_KEY_HANDLE SessionKeyHandle;
+	BCRYPT_KEY_HANDLE bcrypt_key_handle_rsa;
+	/*
+	 * Similar to the keying material, the socket will remain open for the duration of the runtime, 
+	 * the socket is initiated in the constructore, and closed in the destructor 
+	 */
+	SOCKET Connection; 
+#endif

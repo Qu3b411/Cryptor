@@ -2,7 +2,7 @@ import subprocess
 import sys
 
 _all_ = [
-        "pycryptodomex"
+        "pycryptodome"
 ]
 #Any Windows specific packages
 windows = ["pefile",]
@@ -15,8 +15,8 @@ darwin = [""]
 
 def install(packages):
     for package in packages:
-        print("\t[*]",end='')
-        subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+        if package != "":
+            subprocess.check_call([sys.executable, "-m", "pip", "install", package])
 
 #Install all packages, then move to logic for OS specific packages
 if __name__ == '__main__':
