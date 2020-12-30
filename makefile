@@ -28,10 +28,10 @@ Debug: $(SrcPath)/main.c $(SrcPath)/linker.ld | $(Dpath)
 	@echo [*] Dynamically Generating header files
 
 	@echo [*] Checking Config File for server requirements. This may require configration!
-	python ./MFScripts/config.py
+	python3 ./MFScripts/config.py
 	@echo Config file found at expected location!
 	@echo [*] Generating keys...
-	python ./MFScripts/KeyGen.py
+	python3 ./MFScripts/KeyGen.py
 	@echo Keys Generated!
 	@echo Header files Generated.
 	@echo [*] LINKING FILE...
@@ -48,23 +48,23 @@ Debug: $(SrcPath)/main.c $(SrcPath)/linker.ld | $(Dpath)
 	@echo COMPLETED, .payload section is now writable
 
 	@echo [*] Encrypting .payload section...
-	python ./MFScripts/cryptPayload.py $(Dpath)
+	python3 ./MFScripts/cryptPayload.py $(Dpath)
 
 Release: $(SrcPath)/main.c $(SrcPath)/linker.ld | $(Rpath)
 
 	@echo [*] Dynamically Generating header files
 
 	@echo [*] Checking Config File for server requirements. This may require configration!
-	python ./MFScripts/config.py
+	python3 ./MFScripts/config.py
 	@echo Config file found at expected location!
 	@echo [*] Generating keys...
-	python ./MFScripts/KeyGen.py
+	python3 ./MFScripts/KeyGen.py
 	@echo Keys Generated!
 	@echo Header files Generated.
 
 	@echo [*] LINKING FILE...
 	
-	gcc -c  $(SrcPath)/main.c  -o $(Rpath)/cryptor.o 
+	gcc -c  $(SrcPath)/main.c  -o $(Rpath)/cryptor.o
 	gcc -c  ./payload/$(Payload)/*.c  -o $(Rpath)/payload.o $(INC)
 	
 	gcc -s -static -mwindows -fvisibility=hidden -T $(SrcPath)/linker.ld  $(Rpath)/cryptor.o $(Rpath)/payload.o -o $(Rpath)/cryptor.exe -lCrypt32 -lWs2_32 -lBCrypt
@@ -77,7 +77,7 @@ Release: $(SrcPath)/main.c $(SrcPath)/linker.ld | $(Rpath)
 	@echo COMPLETED, .payload section is now writable
 
 	@echo [*] Encrypting .payload section...
-	python ./MFScripts/cryptPayload.py $(Rpath)
+	python3 ./MFScripts/cryptPayload.py $(Rpath)
 
 Clean:
 	@echo Cleanning all generated files and directories
@@ -92,7 +92,7 @@ Clean:
 Conf:
 	@echo Removing current Conf file
 	rm -f ./conf
-	python ./MFScripts/config.py
+	python3 ./MFScripts/config.py
 
 $(Dpath):
 	mkdir -p $(Dpath)
