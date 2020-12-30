@@ -52,6 +52,12 @@
  */
 __attribute__((constructor(101), section(".cryptor"))) int construct()
 {
+	/*
+	* Get the section offsets for the cryptor to decrypt the payload stub
+	*/
+	extern UINT64 START_OF_PAYLOAD;
+	extern UINT64 END_OF_PAYLOAD;
+	
 #ifdef WIN32
 	typedef BOOL (*CIPKIE2)(DWORD dwCertEncodingType, PCERT_PUBLIC_KEY_INFO pInfo, DWORD dwFlag, void *pvAuxInfo, BCRYPT_KEY_HANDLE *phKey);
 	CIPKIE2 CryptImportPublicKeyInfoEx2;
@@ -60,11 +66,6 @@ __attribute__((constructor(101), section(".cryptor"))) int construct()
 	{
 	 	CryptImportPublicKeyInfoEx2 = (CIPKIE2)GetProcAddress(CryptImport,"CryptImportPublicKeyInfoEx2");
 	}
-	/*
-	* Get the section offsets for the cryptor to decrypt the payload stub
-	*/
-	extern UINT64 START_OF_PAYLOAD;
-	extern UINT64 END_OF_PAYLOAD;
 	/*
 	 * Decode the appropriate values to get the offest and the size paramaters correct
 	 */

@@ -34,6 +34,7 @@
 #else
 	#define BYTE unsigned char
 	#define ULONG unsigned long
+	#define UINT64 unsigned long long
 #endif
 
 //#include <stdio.h>
