@@ -8,7 +8,7 @@ _all_ = [
 windows = ["pefile",]
 
 #Any Linx specific packages
-linux = [""]
+linux = ["pyelftools"]
 
 #Any MacOS specific packages
 darwin = [""]
