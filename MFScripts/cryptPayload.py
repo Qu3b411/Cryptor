@@ -27,7 +27,7 @@ def LogPrompt(st):
     print ("\t"+os.path.basename(__file__)+">>\t"+st);
 
 LogPrompt("Opening C2.py...")
-with open("./SVR_SRC/c2.py","r") as f:
+with open("./SVR_SRC/C2.py","r") as f:
     lines = f.readlines();
     LogPrompt("Locating Information in C2.h...")
     for line in lines:
@@ -56,6 +56,8 @@ if platform == "win32":
             SectionName = section.Name.decode().rstrip('\x00');
             SectionOffset = section.PointerToRawData;
             SectionSize = section.SizeOfRawData;
+if platform == "linux":
+    from elftools.elf.elffile import ELFFile
 
 print("\t\tSection Name \tPhysical Offset\tSize Of Section...")
 print("\t\t"+SectionName+"\t"+hex(SectionOffset)+"\t\t\t"+hex(SectionSize));
