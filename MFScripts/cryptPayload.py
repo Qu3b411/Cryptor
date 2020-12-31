@@ -17,16 +17,12 @@
 #
 
 
-
-import pefile
 import os
 import sys
 import re
 import base64
 from Crypto.Cipher import AES
-
-pe = pefile.PE(sys.argv[1]+"/cryptor.exe")
-
+from sys import platform
 def LogPrompt(st):
     print ("\t"+os.path.basename(__file__)+">>\t"+st);
 
@@ -51,11 +47,15 @@ with open("./SVR_SRC/c2.py","r") as f:
 LogPrompt("Closing C2.py!")
 LogPrompt("Locating Section Attributes")
 stdo =sys.stdout;
-for section in pe.sections:
-    if section.Name.decode().rstrip('\x00') == ".payload":
-        SectionName = section.Name.decode().rstrip('\x00');
-        SectionOffset = section.PointerToRawData;
-        SectionSize = section.SizeOfRawData;
+
+if platform == "win32":
+    import pefile
+    pe = pefile.PE(sys.argv[1]+"/cryptor.exe")
+    for section in pe.sections:
+        if section.Name.decode().rstrip('\x00') == ".payload":
+            SectionName = section.Name.decode().rstrip('\x00');
+            SectionOffset = section.PointerToRawData;
+            SectionSize = section.SizeOfRawData;
 
 print("\t\tSection Name \tPhysical Offset\tSize Of Section...")
 print("\t\t"+SectionName+"\t"+hex(SectionOffset)+"\t\t\t"+hex(SectionSize));
