@@ -1,6 +1,8 @@
 # TODO
 **Improve documentation wherever possible, enhance clerity**
 
+**A Lare overhal of the documentation is needed to reflect the recent changes, this will be my next priority**
+
 ~~Clean up file structure, abstract some of the functionality~~
 
 ~~Add SVR_SRC to the python sys.path environment~~
