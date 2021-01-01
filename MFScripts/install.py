@@ -1,5 +1,10 @@
 import subprocess
 import sys
+import os
+import csv
+
+for path in str(os.environ['PATH']).split(";"):
+    print(path) 
 
 _all_ = [
         "pycryptodome"
