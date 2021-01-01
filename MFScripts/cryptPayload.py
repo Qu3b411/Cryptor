@@ -58,6 +58,12 @@ if platform == "win32":
             SectionSize = section.SizeOfRawData;
 if platform == "linux":
     from elftools.elf.elffile import ELFFile
+    with open(sys.argv[1]+"/cryptor.exe","rb+") as  f:
+        for sect in ELFFile(f).iter_sections():
+            if sect.name.rstrip("\x00") == ".payload":
+                SectionName = sect.name.rstrip("\x00")
+                SectionOffset = sect.header['sh_offset']
+                SectionSize = sect.header['sh_size']
 
 print("\t\tSection Name \tPhysical Offset\tSize Of Section...")
 print("\t\t"+SectionName+"\t"+hex(SectionOffset)+"\t\t\t"+hex(SectionSize));
