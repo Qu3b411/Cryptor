@@ -1,0 +1,8 @@
+source ~/.bashrc
+if ! echo $PATH | /bin/grep -Eq "(^|:)$CWD/SVR_SRC\($|:)"; then
+	 echo "export \$PATH:"$PWD"/SVR_SRC" >> ~/.bashrc
+	 echo "here"
+	 . ~/.bashrc
+	
+fi
+

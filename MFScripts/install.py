@@ -1,10 +1,9 @@
+import site
 import subprocess
 import sys
 import os
 import csv
 
-for path in str(os.environ['PATH']).split(";"):
-    print(path) 
 
 _all_ = [
         "pycryptodome"
@@ -23,14 +22,29 @@ def install(packages):
         if package != "":
             subprocess.check_call([sys.executable, "-m", "pip", "install", package])
 
+def insertSite():
+     for s in site.getsitepackages():
+         if s == os.getcwd().rstrip("\x00")+"/SVR_SRC":
+            print("siter: "+s)
+            return
+     print (os.getcwd().rstrip("\x00")+"/SVR_SRC")
+     site.addsitedir(os.getcwd().rstrip("\x00")+"/SVR_SRC")
+
 #Install all packages, then move to logic for OS specific packages
 if __name__ == '__main__':
 
     from sys import platform
-    install(_all_) 
+    install(_all_)    
+    insertSite()
     if platform == 'win32':
         install(windows)
+        print(os.path())
+        for path in str(os.environ['PATH']).split(";"):
+            print(path) 
+
     if platform.startswith('linux'):
         install(linux)
+        svrPath = os.getcwd()+"/SVR_SRC"
+        print(svrPath)
     if platform == 'darwin': # MacOS
         install(darwin)
