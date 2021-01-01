@@ -22,20 +22,14 @@ def install(packages):
         if package != "":
             subprocess.check_call([sys.executable, "-m", "pip", "install", package])
 
-def insertSite():
-     for s in site.getsitepackages():
-         if s == os.getcwd().rstrip("\x00")+"/SVR_SRC":
-            print("siter: "+s)
-            return
-     print (os.getcwd().rstrip("\x00")+"/SVR_SRC")
-     site.addsitedir(os.getcwd().rstrip("\x00")+"/SVR_SRC")
-
 #Install all packages, then move to logic for OS specific packages
 if __name__ == '__main__':
 
     from sys import platform
     install(_all_)    
-    insertSite()
+    with open (site.USER_SITE+"/CryptorSVR.pth", "w") as pathFile:
+            pathFile.write(os.getcwd()+"/SVR_SRC")
+
     if platform == 'win32':
         install(windows)
         print(os.path())
