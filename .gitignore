@@ -10,5 +10,5 @@ CL_SRC/Cryptor.h
 
 #exclude __pycache__
 
-SVR_SRC/__pycache__
+__pycache__/
 

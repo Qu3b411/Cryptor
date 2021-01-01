@@ -27,18 +27,14 @@ if __name__ == '__main__':
 
     from sys import platform
     install(_all_)    
-    with open (site.USER_SITE+"/CryptorSVR.pth", "w") as pathFile:
-            pathFile.write(os.getcwd()+"/SVR_SRC")
+    if not os.path.exists(site.USER_SITE):
+        os.makedirs(site.USER_SITE)
+    with open (site.USER_SITE+"/CryptorSVR.pth", "w+") as pathFile:
+        pathFile.write(os.getcwd()+"/SVR_SRC")
 
     if platform == 'win32':
         install(windows)
-        print(os.path())
-        for path in str(os.environ['PATH']).split(";"):
-            print(path) 
-
     if platform.startswith('linux'):
         install(linux)
-        svrPath = os.getcwd()+"/SVR_SRC"
-        print(svrPath)
     if platform == 'darwin': # MacOS
         install(darwin)
