@@ -1,9 +1,11 @@
 # TODO
 **Improve documentation wherever possible, enhance clerity**
 
-**Clean up file structure, abstract some of the functionality**
+**A Lare overhal of the documentation is needed to reflect the recent changes, this will be my next priority**
 
-**Add SVR_SRC to the system environment in install.py**
+~~Clean up file structure, abstract some of the functionality~~
+
+~~Add SVR_SRC to the python sys.path environment~~
 
 ### Server Side
 
@@ -23,9 +25,11 @@
 
 ~~8. write initialization code for a secure_send() function~~
 
-**9. re-write the server to use classes and inheritence.**
->    This seams like the best meathod to abstract the server functionality
 
+**9. re-write the server to use classes and inheritence.**
+    >    This seams like the best meathod to abstract the server functionality
+    >   got this working without, but it is likely a matter of best practice to update this eventually
+    
 ### Client side (CS_SRC)
 
 ~~1. Connect to server~~
@@ -58,7 +62,7 @@
     a. Copy from .txt to End_of_Payload - DONE
     b. Add that to the linker.id dump - DONE
 ```
-3. cryptPayload.py
+~~3. cryptPayload.py~~
 ```
     a. Change pefile (Windows uses PE while linux uses ELF)
 ```    
