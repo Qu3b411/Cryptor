@@ -1,3 +1,7 @@
+#!/usr/bin/env python3
+
+# this script installs dependecnies and adds the appropriate
+# system paths for the server imports to work as intended
 import site
 import subprocess
 import sys

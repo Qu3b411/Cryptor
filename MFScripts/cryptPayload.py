@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # this file is responsible for encrypting the .payload section.
 #
 # Copyright (C) 2020  @Qu3b411

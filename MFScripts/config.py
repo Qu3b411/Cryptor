@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # This Script is responsible for generating the config file used durring
 # the build process of the cryptor
 #
