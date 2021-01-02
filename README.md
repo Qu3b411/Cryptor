@@ -43,7 +43,7 @@ PL_int main()
 your server component should be in the sever directory of the payload being defined, 
 ```python3
 #!/usr/bin/env python3
-import sercer
+import server
 # Your imports here
 
 # your server code here
