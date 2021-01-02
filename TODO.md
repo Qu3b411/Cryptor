@@ -27,8 +27,10 @@
 
 
 **9. re-write the server to use classes and inheritence.**
-    >    This seams like the best meathod to abstract the server functionality
-    >   got this working without, but it is likely a matter of best practice to update this eventually
+
+   ~~This seams like the best meathod to abstract the server functionality~~
+
+       got this working without, but it is likely a matter of best practice to update this eventually
     
 ### Client side (CS_SRC)
 
@@ -77,5 +79,6 @@
 ```
 5. Add new python libraries to ~~quirements.txt~~ install.py
 
+6. Implement linux variant of cryptor framework client side
 
 
