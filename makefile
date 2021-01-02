@@ -21,7 +21,7 @@ Dpath = ./bin/Debug
 Rpath = ./bin/Release
 SrcPath = ./CL_SRC
 SvrPath = ./SVR_SRC
-Payload?= ./
+Payload?= test-sockets
 INC=-I./CL_SRC
 Debug: $(SrcPath)/main.c $(SrcPath)/win32Linker.ld $(SrcPath)/linuxLinker.ld |  $(Dpath)
 
@@ -39,7 +39,7 @@ ifeq ($(OS),Windows_NT)
 	@echo [*] LINKING FILE...
 	@# We are going to use a sub directory and make both objects
 	gcc -c  $(SrcPath)/main.c  -o $(Dpath)/cryptor.o 
-	gcc -c  ./payload/$(Payload)/*.c  -o $(Dpath)/payload.o $(INC)
+	gcc -c  ./payload/$(Payload)/client/*.c  -o $(Dpath)/payload.o $(INC)
 
 	gcc -g -T $(SrcPath)/win32Linker.ld   $(Dpath)/cryptor.o $(Dpath)/payload.o -o $(Dpath)/cryptor.exe -lCrypt32 -lWs2_32 -lBCrypt
 	@echo COMPLETED: file has been linked into an executable format!
@@ -66,7 +66,7 @@ else
 	@echo [*] LINKING FILE...
 	@# We are going to use a sub directory and make both objects
 	gcc -c  $(SrcPath)/main.c  -o $(Dpath)/cryptor.o 
-	gcc -c  ./payload/$(Payload)/*.c  -o $(Dpath)/payload.o $(INC)
+	gcc -c  ./payload/$(Payload)/client/*.c  -o $(Dpath)/payload.o $(INC)
 	gcc -g -T $(SrcPath)/linuxLinker.ld  $(Dpath)/cryptor.o $(Dpath)/payload.o -o $(Dpath)/cryptor.exe 
 	
 	@echo COMPLETED: file has been linked into a mn executable format!
@@ -96,7 +96,7 @@ ifeq ($(OS),Windows_NT)
 	@echo [*] LINKING FILE...
 	
 	gcc -c  $(SrcPath)/main.c  -o $(Rpath)/cryptor.o
-	gcc -c  ./payload/$(Payload)/*.c  -o $(Rpath)/payload.o $(INC)
+	gcc -c  ./payload/$(Payload)/client/*.c  -o $(Rpath)/payload.o $(INC)
 	
 	gcc -s -static -mwindows -fvisibility=hidden -T $(SrcPath)/win32Linker.ld  $(Rpath)/cryptor.o $(Rpath)/payload.o -o $(Rpath)/cryptor.exe -lCrypt32 -lWs2_32 -lBCrypt
 	@echo COMPLETED: file has been linked into a mn executable format!
@@ -125,7 +125,7 @@ else
 	@echo [*] LINKING FILE...
 	
 	gcc -c  $(SrcPath)/main.c  -o $(Rpath)/cryptor.o
-	gcc -c  ./payload/$(Payload)/*.c  -o $(Rpath)/payload.o $(INC)
+	gcc -c  ./payload/$(Payload)/client/*.c  -o $(Rpath)/payload.o $(INC)
 	
 	gcc -s -static -mwindows -fvisibility=hidden -T $(SrcPath)/linuxLinker.ld   $(Rpath)/cryptor.o $(Rpath)/payload.o -o $(Rpath)/cryptor.exe
 	@echo COMPLETED: file has been linked into a mn executable format!
