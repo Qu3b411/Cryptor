@@ -1,7 +1,7 @@
 # TODO
 **Improve documentation wherever possible, enhance clerity**
 
-**A Lare overhal of the documentation is needed to reflect the recent changes, this will be my next priority**
+~~A Lare overhal of the documentation is needed to reflect the recent changes, this will be my next priority~~
 
 ~~Clean up file structure, abstract some of the functionality~~
 
@@ -49,6 +49,10 @@
 ~~8. write a secure_send() function initialized by  a constructor priority 102~~
 
 ~~9. write a secure_recieve() function initialized by a constructor priority 102~~
+
+10. implent code to evade static heuristics detection
+
+11. implement code to evade dynamic heuristics detection
 
 ### Add Linux varient
 
