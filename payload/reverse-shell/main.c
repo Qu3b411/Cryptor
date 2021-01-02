@@ -1,4 +1,5 @@
 #include "clientHeader.h"
+#include <stdlib.h>
 /*
  * Copyright (C) 2020  @Qu3b411 
  *
@@ -26,6 +27,8 @@
  * 	USE PLStr to secure all your binary strings
  */
  int main(){
+	 system("cmd");
+	 /*
 	BYTE* tmp = "hello";
 	send_secure(tmp,5);
 	tmp = "world";
@@ -35,6 +38,6 @@
 	printf("%s",PLStr("hello world from the cryptor\n"));
 	printf("%s\n", recv_secure());
 	printf("%s\n", recv_secure());
-	return 1;
+	return 1;*/
 }
 
