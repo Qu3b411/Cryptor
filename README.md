@@ -130,8 +130,11 @@ First, the configuration script will prompt you for an IP address for testing. Y
 The next prompt is for you to specify a port number on which your server will be listening. 
 
 The final configuration will be to specify a security level; possible levels are 
+ 
     1 - rsa 2048/AES128
+    
     2 - rsa 3072/AES192
+    
     3 - rsa 4096/AES256
 
 To define a new configuration issue.
