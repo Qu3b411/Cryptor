@@ -3,7 +3,7 @@
 NOTES:
 I'm starting work on a reverse shell, ths is not complete but the directory is in the payloads, I'm still not sure yet how I am going to write this payload, but it isn't a simple redirection of stdin/stdout. Please dont expect that to run if you set that as the payload.
 
-Linux compatibilty is not here yet, but it is close, @fox345 is going to be working on developing that element of the functionality in the LinuxAdaptation branch
+Linux compatibilty is not here yet, but it is close, @fox3455 is going to be working on developing that element of the functionality in the LinuxAdaptation branch
 
 Finally I would love any help in developing new and unique payloads, this truely is the point of setting it up the way I did, I wanted a moduler method for creating payloads that anyone could use. 
 
