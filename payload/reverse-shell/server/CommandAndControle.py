@@ -2,4 +2,7 @@
 import server; 
 import sys
 
-print(server.secure_recv().decode('ascii'))
+while(True):
+    print(server.secure_recv().decode('ascii'),end="")
+    Command = input();
+    server.secure_send(Command.encode("utf8"),len(Command))

