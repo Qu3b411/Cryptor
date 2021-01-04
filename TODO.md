@@ -1,7 +1,7 @@
 # TODO
 **Improve documentation wherever possible, enhance clerity**
 
-**A Lare overhal of the documentation is needed to reflect the recent changes, this will be my next priority**
+~~A Lare overhal of the documentation is needed to reflect the recent changes, this will be my next priority~~
 
 ~~Clean up file structure, abstract some of the functionality~~
 
@@ -27,8 +27,10 @@
 
 
 **9. re-write the server to use classes and inheritence.**
-    >    This seams like the best meathod to abstract the server functionality
-    >   got this working without, but it is likely a matter of best practice to update this eventually
+
+   ~~This seams like the best meathod to abstract the server functionality~~
+
+       got this working without, but it is likely a matter of best practice to update this eventually
     
 ### Client side (CS_SRC)
 
@@ -49,6 +51,10 @@
 ~~8. write a secure_send() function initialized by  a constructor priority 102~~
 
 ~~9. write a secure_recieve() function initialized by a constructor priority 102~~
+
+10. implent code to evade static heuristics detection
+
+11. implement code to evade dynamic heuristics detection
 
 ### Add Linux varient
 
@@ -73,5 +79,6 @@
 ```
 5. Add new python libraries to ~~quirements.txt~~ install.py
 
+6. Implement linux variant of cryptor framework client side
 
 
