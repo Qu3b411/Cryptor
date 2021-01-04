@@ -33,7 +33,11 @@ Specifying the payload to build requires the Payload=payload-name directive to b
 ```
 the client components are written in C, whereas the server components are Python. 
 
+<<<<<<< HEAD
 To get started building your first payload, you need a client component. The client should be in the client directory of the payload being defined.
+=======
+To get started building your first payload, you need a client component. The client should be in the client directory of the payload is defined.
+>>>>>>> e19f9be13ef27016768ecc00c86136ea68bf9a90
 
 main.c
 ```C

@@ -31,6 +31,7 @@
 	#include <ws2tcpip.h>
 	#include <bcrypt.h>
 	#include <ntstatus.h>
+	#define PLwchar_tstr(Lstr) (wchar_t[]){Lstr}
 #else
 	#define BYTE unsigned char
 	#define ULONG unsigned long
