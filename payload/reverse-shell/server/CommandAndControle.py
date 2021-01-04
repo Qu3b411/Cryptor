@@ -2,4 +2,4 @@
 import server; 
 import sys
 
-print(str(server.secure_recv()))
+print(server.secure_recv().decode('ascii'))

