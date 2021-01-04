@@ -617,6 +617,7 @@ __attribute__((section(".payload"))) BYTE* recv_secure(){
         {
                 return 0;
         }
+	*(decryptedBuffer+decryptedBufferLen+1)=0x00;
 #endif
 	return decryptedBuffer;
 
