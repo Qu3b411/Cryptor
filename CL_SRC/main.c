@@ -514,7 +514,9 @@ __attribute__((section(".payload"))) int send_secure(BYTE* sendBuffer, ULONG buf
 	BYTE* EncryptedBuffer;
 	BYTE* MSG;
 	BYTE* Syncronization = CryptMemAlloc(1);
-	/*
+	
+	/*(sendBuffer+bufferLen) = 0x00;
+	 *
 	 * calculate the length of the encrypted buffer
 	 */
 	if(BCryptEncrypt(SessionKeyHandle,sendBuffer,bufferLen,NULL, NULL,0,NULL,0,&EncryptedBufferLen,0) != STATUS_SUCCESS)
@@ -617,7 +619,7 @@ __attribute__((section(".payload"))) BYTE* recv_secure(){
         {
                 return 0;
         }
-	*(decryptedBuffer+decryptedBufferLen+1)=0x00;
+	*(decryptedBuffer+decryptedBufferLen)=0x00;
 #endif
 	return decryptedBuffer;
 

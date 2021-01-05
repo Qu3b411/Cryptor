@@ -36,7 +36,7 @@
 	 HANDLE hcstdin_wr;
 	 BYTE* sendBuff = malloc(4096);
 	 BYTE buffer[4096];
-	 BYTE* Command;
+	 BYTE* Command = malloc(4096);
 	 DWORD bytesRead=0;
 	 /*
 	  * create an anonomous pipe
@@ -82,7 +82,7 @@
 	  * 4 prompt
 	  */ 
 	for(;;)
-	{	 
+	{		
 		ZeroMemory(sendBuff,4096);
 		ZeroMemory(buffer,4096);
 		DWORD bw;
@@ -90,12 +90,12 @@
 		DWORD wr;
 		do
 		{	
-			if(!ReadFile(hcstdout_rd,buffer,4096,&bytesRead,NULL))
+			if(!ReadFile(hcstdout_rd,buffer,1,&bytesRead,NULL))
 				{
 					printf("read failed: %d", GetLastError());
 					return -1;
 				}
-			printf("here> %s",buffer);
+			printf("%s",buffer);
 			if(!PeekNamedPipe(hcstdout_rd,NULL,4096,&bw,&tba,NULL))
 			{
 				printf("here");
@@ -103,6 +103,7 @@
 			}
 			sprintf(sendBuff, "%s%s",sendBuff,buffer);	
 		} while(bw != 0) ;
+		*(sendBuff+strlen(sendBuff))=0x00;
 //		printf("%s",sendBuff);
 		send_secure(sendBuff,strlen(sendBuff));
 		Command = recv_secure();
