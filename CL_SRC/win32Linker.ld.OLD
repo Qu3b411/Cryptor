@@ -1,10 +1,11 @@
+
 /* Default linker script, for normal executables */
 /* Copyright (C) 2014-2018 Free Software Foundation, Inc.
    Copying and distribution of this script, with or without modification,
    are permitted in any medium without royalty provided the copyright
    notice and this notice are preserved.  */
 OUTPUT_FORMAT(pei-i386)
-SEARCH_DIR("=/c/mingw810/prerequisites/i686-binutils-nomulti/i686-w64-mingw32/lib"); SEARCH_DIR("=/c/mingw810/prerequisites/i686-binutils-nomulti/lib"); SEARCH_DIR("=/usr/local/lib"); SEARCH_DIR("=/lib"); SEARCH_DIR("=/usr/lib");
+SEARCH_DIR("=/c/mingw810/prerequisites/x86_64-binutils-nomulti/x86_64-w64-mingw32/lib"); SEARCH_DIR("=/c/mingw810/prerequisites/x86_64-binutils-nomulti/lib"); SEARCH_DIR("=/usr/local/lib"); SEARCH_DIR("=/lib"); SEARCH_DIR("=/usr/lib");
 SECTIONS
 {
   /* Make the virtual address and file offset synced if the alignment is
@@ -16,10 +17,11 @@ SECTIONS
      KEEP(*(.init))
     *(.text)
     *(SORT(.text$*))
-     *(.text.*)
+    *(.text.*)
      *(.gnu.linkonce.t.*)
     *(.glue_7t)
     *(.glue_7)
+    . = ALIGN(8);
        /* Note: we always define __CTOR_LIST__ and ___CTOR_LIST__ here,
           we do not PROVIDE them.  This is because the ctors.o startup
 	  code in libgcc defines them as common symbols, with the
@@ -35,47 +37,36 @@ SECTIONS
 	  See PR 22762 for more details.  */
        ___CTOR_LIST__ = .;
        __CTOR_LIST__ = .;
-       LONG (-1);
-       KEEP(*(.ctors));
-       KEEP(*(.ctor));
-       KEEP(*(SORT_BY_NAME(.ctors.*)));
-       LONG (0);
+       LONG (-1); LONG (-1);
+       KEEP (*(.ctors));
+       KEEP (*(.ctor));
+       KEEP (*(SORT_BY_NAME(.ctors.*)));
+       LONG (0); LONG (0);
        /* See comment about __CTOR_LIST__ above.  The same reasoning
-          applies here too.  */
+    	  applies here too.  */
        ___DTOR_LIST__ = .;
        __DTOR_LIST__ = .;
-       LONG (-1);
-       KEEP(*(.dtors));
-       KEEP(*(.dtor));
-       KEEP(*(SORT_BY_NAME(.dtors.*)));
-       LONG (0);
+       LONG (-1); LONG (-1);
+       KEEP (*(.dtors));
+       KEEP (*(.dtor));
+       KEEP (*(SORT_BY_NAME(.dtors.*)));
+       LONG (0); LONG (0);
      KEEP (*(.fini))
     /* ??? Why is .gcc_exc here?  */
      *(.gcc_exc)
     PROVIDE (etext = .);
-    PROVIDE (_etext = .);
      KEEP (*(.gcc_except_table))
   }
-
   .cryptor BLOCK(__section_alignment__) :{
         *(.cryptor)
   }
 
   .payload BLOCK(__section_alignment__) : {
-    	START_OF_PAYLOAD = . ;
+    	PROVIDE(START_OF_PAYLOAD = . );
     	*(.payload)
     	. = ALIGN(0x200); /*minimum size of a section*/
-   	END_OF_PAYLOAD = . ;
+   	PROVIDE(END_OF_PAYLOAD = . );
   }
-  /*
-   * took forever to figure this out. apparently this is the correct way to make
-   * sure the variables can be exported
-   */
-  _START_OF_PAYLOAD = START_OF_PAYLOAD;
-  __START_OF_PAYLOAD = START_OF_PAYLOAD;
-  _END_OF_PAYLOAD = END_OF_PAYLOAD;
-  __END_OF_PAYLOAD = END_OF_PAYLOAD;
-  
   /* The Cygwin32 library uses a section to avoid copying certain data
      on fork.  This used to be named ".data".  The linker used
      to include this between __data_start__ and __data_end__, but that
@@ -106,11 +97,15 @@ SECTIONS
   __RUNTIME_PSEUDO_RELOC_LIST__ = . - __rt_psrelocs_size;
   .eh_frame BLOCK(__section_alignment__) :
   {
-    KEEP(*(.eh_frame*))
+    KEEP (*(.eh_frame*))
   }
   .pdata BLOCK(__section_alignment__) :
   {
     KEEP(*(.pdata*))
+  }
+  .xdata BLOCK(__section_alignment__) :
+  {
+    KEEP(*(.xdata*))
   }
   .bss BLOCK(__section_alignment__) :
   {
@@ -135,14 +130,14 @@ SECTIONS
   .idata BLOCK(__section_alignment__) :
   {
     /* This cannot currently be handled with grouped sections.
-	See pe.em:sort_sections.  */
+	See pep.em:sort_sections.  */
     KEEP (SORT(*)(.idata$2))
     KEEP (SORT(*)(.idata$3))
     /* These zeroes mark the end of the import list.  */
     LONG (0); LONG (0); LONG (0); LONG (0); LONG (0);
     KEEP (SORT(*)(.idata$4))
     __IAT_start__ = .;
-    KEEP (SORT(*)(.idata$5))
+    SORT(*)(.idata$5)
     __IAT_end__ = .;
     KEEP (SORT(*)(.idata$6))
     KEEP (SORT(*)(.idata$7))
@@ -166,7 +161,7 @@ SECTIONS
     ___crt_xt_end__ = . ;
   }
   /* Windows TLS expects .tls$AAA to be at the start and .tls$ZZZ to be
-     at the end of section.  This is important because _tls_start MUST
+     at the end of the .tls section.  This is important because _tls_start MUST
      be at the beginning of the section to enable SECREL32 relocations with TLS
      data.  */
   .tls BLOCK(__section_alignment__) :
@@ -259,11 +254,11 @@ SECTIONS
   }
   .debug_frame BLOCK(__section_alignment__) (NOLOAD) :
   {
-    *(.debug_frame*)
+    *(.debug_frame)
   }
   .zdebug_frame BLOCK(__section_alignment__) (NOLOAD) :
   {
-    *(.zdebug_frame*)
+    *(.zdebug_frame)
   }
   .debug_str BLOCK(__section_alignment__) (NOLOAD) :
   {
@@ -346,7 +341,7 @@ SECTIONS
   }
   .zdebug_types BLOCK(__section_alignment__) (NOLOAD) :
   {
-    *(.zdebug_types .gnu.linkonce.wt.*)
+    *(.zdebug_types .zdebug.gnu.linkonce.wt.*)
   }
   /* For Go and Rust.  */
   .debug_gdb_scripts BLOCK(__section_alignment__) (NOLOAD) :
@@ -358,6 +353,4 @@ SECTIONS
     *(.zdebug_gdb_scripts)
   }
 }
-
-
 
