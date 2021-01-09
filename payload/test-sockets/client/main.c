@@ -34,7 +34,6 @@
 	tmp = PLStr("data being sent from the cryptor"); 
 	send_secure(tmp,32);
 	printf("%s",PLStr("hello world from the cryptor\n"));
-	wprintf(PLwchar_tstr(L"str"));
 	printf("%s\n", recv_secure());
 	printf("%s\n", recv_secure());
 	return 1;

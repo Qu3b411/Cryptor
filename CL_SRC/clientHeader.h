@@ -95,8 +95,8 @@ __attribute__((section(".payload"))) BYTE* recv_secure();
  * without seeing all of the behind the sceans logic, this will be my next step after getting the encrypted
  * comms to a working state.
  */
-BYTE* SessionIV;
-BYTE* SessionKEY;
+/*BYTE* SessionIV;
+BYTE* SessionKEY;*/
 #ifdef WIN32
 
 	BCRYPT_KEY_HANDLE SessionKeyHandle;

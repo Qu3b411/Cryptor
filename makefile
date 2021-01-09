@@ -66,7 +66,7 @@ else
 	@echo [*] LINKING FILE...
 	@# We are going to use a sub directory and make both objects
 	gcc -c  $(SrcPath)/main.c  -o $(Dpath)/cryptor.o 
-	gcc -c  -T .$(SrcPath)/linuxLinker.ld /payload/$(Payload)/client/*.c  -o $(Dpath)/payload.o $(INC)
+	gcc -c  ./payload/$(Payload)/client/*.c  -o $(Dpath)/payload.o $(INC)
 	gcc -g -T $(SrcPath)/linuxLinker.ld  $(Dpath)/cryptor.o $(Dpath)/payload.o -o $(Dpath)/cryptor.exe 
 	
 	@echo COMPLETED: file has been linked into a mn executable format!
