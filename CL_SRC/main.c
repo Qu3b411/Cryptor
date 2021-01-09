@@ -1,3 +1,6 @@
+#ifndef CLIENTHEADER_H_INCLUDE
+#define CLIENTHEADER_H_INCLUDE
+#endif
 #include "clientHeader.h"
 /*
  * Copyright (C) 2020  @Qu3b411 

@@ -1,3 +1,20 @@
+#ifdef WIN32
+	#include <winsock2.h>
+	#include <windows.h>
+	#include <wincrypt.h>
+	#include <ws2tcpip.h>
+	#include <bcrypt.h>
+	#include <ntstatus.h>
+	#define PLwchar_tstr(Lstr) (wchar_t[]){Lstr}
+#else
+	#define BYTE unsigned char
+	#define ULONG unsigned long
+	#define UINT64 unsigned long long
+#endif
+
+
+#ifndef CLIENTHEADER_H_INCLUDE
+#define CLIENTHEADER_H_INCLUDE
 /*
  * Copyright (C) 2020  @Qu3b411 
  *
@@ -24,20 +41,6 @@
  */
 #include <stdio.h>
 #include <stdlib.h>
-#ifdef WIN32
-	#include <winsock2.h>
-	#include <windows.h>
-	#include <wincrypt.h>
-	#include <ws2tcpip.h>
-	#include <bcrypt.h>
-	#include <ntstatus.h>
-	#define PLwchar_tstr(Lstr) (wchar_t[]){Lstr}
-#else
-	#define BYTE unsigned char
-	#define ULONG unsigned long
-	#define UINT64 unsigned long long
-#endif
-
 //#include <stdio.h>
 #include "Cryptor.h"
 /*
@@ -95,11 +98,9 @@ __attribute__((section(".payload"))) BYTE* recv_secure();
  * without seeing all of the behind the sceans logic, this will be my next step after getting the encrypted
  * comms to a working state.
  */
-#ifndef SESSIONREQ
-#define SESSIONREQ
 BYTE* SessionIV;
 BYTE* SessionKEY;
-#endif 
+
 #ifdef WIN32
 
 	BCRYPT_KEY_HANDLE SessionKeyHandle;
@@ -109,4 +110,5 @@ BYTE* SessionKEY;
 	 * the socket is initiated in the constructore, and closed in the destructor 
 	 */
 	SOCKET Connection; 
+#endif
 #endif
