@@ -4,7 +4,8 @@
    are permitted in any medium without royalty provided the copyright
    notice and this notice are preserved.  */
 OUTPUT_FORMAT(pei-i386)
-SEARCH_DIR("=/c/mingw810/prerequisites/i686-binutils-nomulti/i686-w64-mingw32/lib"); SEARCH_DIR("=/c/mingw810/prerequisites/i686-binutils-nomulti/lib"); SEARCH_DIR("=/usr/local/lib"); SEARCH_DIR("=/lib"); SEARCH_DIR("=/usr/lib");
+OUTPUT_FORMAT(pei-x86-64)
+SEARCH_DIR("=/c/mingw810/prerequisites/x86_64-binutils-nomulti/x86_64-w64-mingw32/lib"); SEARCH_DIR("=/c/mingw810/prerequisites/x86_64-binutils-nomulti/lib");SEARCH_DIR("=/c/mingw810/prerequisites/i686-binutils-nomulti/i686-w64-mingw32/lib"); SEARCH_DIR("=/c/mingw810/prerequisites/i686-binutils-nomulti/lib"); SEARCH_DIR("=/usr/local/lib"); SEARCH_DIR("=/lib"); SEARCH_DIR("=/usr/lib");
 SECTIONS
 {
   /* Make the virtual address and file offset synced if the alignment is
