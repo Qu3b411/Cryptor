@@ -1,3 +1,5 @@
+NOTE: Still have to adapt the server for multi client controle and plug in fastapi to set up web gui controles for multiple target support. Finally we must finish off the linux specific variation.
+
 # C2 Payload Cryptor
 
 NOTES:
