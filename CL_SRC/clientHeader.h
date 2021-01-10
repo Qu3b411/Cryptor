@@ -13,8 +13,6 @@
 #endif
 
 
-#ifndef CLIENTHEADER_H_INCLUDE
-#define CLIENTHEADER_H_INCLUDE
 /*
  * Copyright (C) 2020  @Qu3b411 
  *
@@ -98,11 +96,9 @@ __attribute__((section(".payload"))) BYTE* recv_secure();
  * without seeing all of the behind the sceans logic, this will be my next step after getting the encrypted
  * comms to a working state.
  */
-BYTE* SessionIV;
-BYTE* SessionKEY;
-
-#ifdef WIN32
-
+#ifdef _WIN32
+	BYTE* SessionIV;
+	BYTE* SessionKEY;
 	BCRYPT_KEY_HANDLE SessionKeyHandle;
 	BCRYPT_KEY_HANDLE bcrypt_key_handle_rsa;
 	/*
@@ -111,4 +107,4 @@ BYTE* SessionKEY;
 	 */
 	SOCKET Connection; 
 #endif
-#endif
+
