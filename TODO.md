@@ -7,7 +7,7 @@
 
 ~~3. Add SVR_SRC to the python sys.path environment~~
 
-4. Write CreatePayload.py script
+~~4. Write CreatePayload.py script~~
 
 ### Server Side
 
