@@ -95,7 +95,7 @@
 					printf("read failed: %d", GetLastError());
 					return -1;
 				}
-			printf("%s",buffer);
+		//	printf("%s",buffer);
 			if(!PeekNamedPipe(hcstdout_rd,NULL,4096,&bw,&tba,NULL))
 			{
 				printf("here");
@@ -103,14 +103,14 @@
 			}
 			sprintf(sendBuff, "%s%s",sendBuff,buffer);	
 		} while(bw != 0) ;
-		*(sendBuff+strlen(sendBuff))=0x00;
+		*(sendBuff+strlen(sendBuff)-1)=0x00;
 //		printf("%s",sendBuff);
 		send_secure(sendBuff,strlen(sendBuff));
 		Command = recv_secure();
 		if(!WriteFile(hcstdin_wr,strcat(Command,"\n"),strlen(Command)+1,&wr,NULL))
 		{
 				
-			printf("something fucked up");
+			printf("Error: Write failed");
 			return -1;
 		}
 		sleep(1);

