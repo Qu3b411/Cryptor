@@ -21,7 +21,7 @@ Dpath = ./bin/Debug
 Rpath = ./bin/Release
 SrcPath = ./CL_SRC
 SvrPath = ./SVR_SRC
-Payload?= reverse_shell
+Payload?= test-sockets
 INC=-I./CL_SRC
 Debug: $(SrcPath)/main.c $(SrcPath)/win32Linker.ld $(SrcPath)/linuxLinker.ld |  $(Dpath)
 
@@ -30,7 +30,7 @@ ifeq ($(OS),Windows_NT)
 	@echo [*] Installing Python requirements
 	@py -3 ./MFScripts/install.py
 	@echo [*] Checking Config File for server requirements. This may require configration!
-	@py -3 ./MFScripts/config.py $(Payload)
+	@py -3 ./MFScripts/config.py
 	@echo Config file found at expected location!
 	@echo [*] Generating keys...
 	@py -3 ./MFScripts/KeyGen.py
@@ -57,7 +57,7 @@ else
 	@echo [*] Installing Python requirements
 	@python3 ./MFScripts/install.py
 	@echo [*] Checking Config File for server requirements. This may require configration!
-	@python3 ./MFScripts/config.py $(Payload)
+	@python3 ./MFScripts/config.py
 	@echo Config file found at expected location!
 	@echo [*] Generating keys...
 	@python3 ./MFScripts/KeyGen.py
@@ -86,7 +86,7 @@ ifeq ($(OS),Windows_NT)
 	@echo [*] Installing Python requirements
 	@py -3 ./MFScripts/install.py
 	@echo [*] Checking Config File for server requirements. This may require configration!
-	@py -3 ./MFScripts/config.py $(Payload)
+	@py -3 ./MFScripts/config.py
 	@echo Config file found at expected location!
 	@echo [*] Generating keys...
 	@py -3 ./MFScripts/KeyGen.py
@@ -115,7 +115,7 @@ else
 	@echo [*] Installing Python requirements
 	@python3  ./MFScripts/install.py
 	@echo [*] Checking Config File for server requirements. This may require configration!
-	@python3 ./MFScripts/config.py $(Payload)
+	@python3 ./MFScripts/config.py
 	@echo Config file found at expected location!
 	@echo [*] Generating keys...
 	@python3 ./MFScripts/KeyGen.py

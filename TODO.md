@@ -1,13 +1,11 @@
 # TODO
 **Improve documentation wherever possible, enhance clerity**
 
-~~1. A Lare overhal of the documentation is needed to reflect the recent changes, this will be my next priority~~
+~~A Lare overhal of the documentation is needed to reflect the recent changes, this will be my next priority~~
 
-~~2. Clean up file structure, abstract some of the functionality~~
+~~Clean up file structure, abstract some of the functionality~~
 
-~~3. Add SVR_SRC to the python sys.path environment~~
-
-~~4. Write CreatePayload.py script~~
+~~Add SVR_SRC to the python sys.path environment~~
 
 ### Server Side
 
