@@ -26,8 +26,8 @@
  * 	USE PLStr to secure all your binary strings
  */
  PL_int main(){
-printf("hello");	 
-	/*BYTE* tmp = "hello";
+ 	printf("hello");	 
+	BYTE* tmp = "hello";
 	send_secure(tmp,5);
 	tmp = "world";
 	send_secure(tmp,5);
@@ -36,6 +36,6 @@ printf("hello");
 	printf("%s",PLStr("hello world from the cryptor\n"));
 	printf("%s\n", recv_secure());
 	printf("%s\n", recv_secure());
-*/	return 1;
+	return 1;
 }
 

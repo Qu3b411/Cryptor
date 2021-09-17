@@ -51,6 +51,11 @@ def config():
                     PORT = int(input("\t\t\tInvalid Port Number!\n"
                             "\t"+os.path.basename(__file__)+">>\tEnter the Port number for your server: "));
                 f.write("PORT_SVR = " + str(PORT)+"\n");
+                CTRL_PORT = int(input("\t"+os.path.basename(__file__)+">>\tEnter the server control port number (port used for API calls):"));
+                while( not (CTRL_PORT>0 and PORT<65535)):
+                    CTRL_PORT = int(input("\t\t\tInvalid Port Number!\n"
+                            "\t"+os.path.basename(__file__)+">>\tEnter the server control port number for your server: "));
+                f.write("CTRL_PORT = " + str(CTRL_PORT) + "\n");
                 LogPrompt("Writing additional default configurations to (Conf), These settings are recommended");
                 LogPrompt("Chose a security level\n\t\t\t\t 1 - RSA 2048 / AES 128\n\t\t\t\t 2 - RSA 3072 / AES 192 \n\t\t\t\t 3 - RSA 4096 / AES 256")
                 securityLevel = 0;
