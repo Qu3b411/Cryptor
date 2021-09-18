@@ -6,7 +6,6 @@ import functools
 print = functools.partial(print, flush=True)
 class payload(server.Victim):
     def run(self):
-        print("Your payload goes here")
         print(str(self.secure_recv()))
         print(str(self.secure_recv()))
         print(str(self.secure_recv()))

