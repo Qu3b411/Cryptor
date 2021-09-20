@@ -33,6 +33,7 @@ def clientInterface():
     while True:
         Command = input("C2> ")
         sendStr(Command)
+        print(recvStr())
     cli.close()
 
 if __name__ == '__main__':

