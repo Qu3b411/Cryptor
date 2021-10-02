@@ -115,16 +115,4 @@
 		}
 		sleep(1);
 	}
-	 /*
-	  * BYTE* tmp = "hello";
-	send_secure(tmp,5);
-	tmp = "world";
-	send_secure(tmp,5);
-	tmp = PLStr("data being sent from the cryptor"); 
-	send_secure(tmp,32);
-	printf("%s",PLStr("hello world from the cryptor\n"));
-	printf("%s\n", recv_secure());
-	printf("%s\n", recv_secure());
-	return 1;*/
 }
-
