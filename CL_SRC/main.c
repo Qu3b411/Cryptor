@@ -34,7 +34,7 @@
  * 	- Generating a One Time Pad
  * 	- RSA encrypting the generated One Time Pad
  * 	- Sending the encrypted One Time Pad to the server
- * 	- Detrieving an AES key encoded with the One Time Pad
+ * 	- geting an AES key encoded with the One Time Pad
  * 	- Decoding the AES key
  *	- Decrypting the .payload section
  * if this function is successful then a WINSOC ("Connection") will be constructed for the payload environment

