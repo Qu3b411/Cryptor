@@ -10,7 +10,8 @@ import csv
 
 
 _all_ = [
-        "pycryptodome"
+        "pycryptodome",
+        "simplejson"
 ]
 #Any Windows specific packages
 windows = ["pefile",]

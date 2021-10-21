@@ -26,16 +26,14 @@
  * 	USE PLStr to secure all your binary strings
  */
  PL_int main(){
-printf("hello");	 
-	/*BYTE* tmp = "hello";
-	send_secure(tmp,5);
-	tmp = "world";
-	send_secure(tmp,5);
-	tmp = PLStr("data being sent from the cryptor"); 
-	send_secure(tmp,32);
-	printf("%s",PLStr("hello world from the cryptor\n"));
-	printf("%s\n", recv_secure());
-	printf("%s\n", recv_secure());
-*/	return 1;
+	setbuf(stdout,NULL);
+	BYTE* tmp;
+	while(1){
+
+		tmp = PLStr("Hello"); 
+		send_secure(tmp,5);
+		printf("%s\n", recv_secure());
+	}
+	return 1;
 }
 
