@@ -27,23 +27,12 @@
  */
  PL_int main(){
 	setbuf(stdout,NULL);
-// 	printf("hello");	 
-	BYTE* tmp = "hello";
-/*	send_secure(tmp,5);
-	tmp = "world";
-	send_secure(tmp,5);
-	tmp = PLStr("data being sent from the cryptor"); 
-	send_secure(tmp,32);
-	printf("%s",PLStr("hello world from the cryptor\n"));
-	printf("%s\n", recv_secure());*/
+	BYTE* tmp;
 	while(1){
 
-		tmp = PLStr("data being sent from the cryptor"); 
-	//	printf("1\n");
-		send_secure(tmp,32);
-	//	printf("2\n");
+		tmp = PLStr("Hello"); 
+		send_secure(tmp,5);
 		printf("%s\n", recv_secure());
-	//	printf("3\n");
 	}
 	return 1;
 }
