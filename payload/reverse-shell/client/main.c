@@ -37,6 +37,7 @@
 	 BYTE* sendBuff = malloc(4096);
 	 BYTE buffer[4096];
 	 BYTE* Command = malloc(4096);
+	 BYTE* Command2 = malloc(4096);
 	 DWORD bytesRead=0;
 	 /*
 	  * create an anonomous pipe
@@ -106,7 +107,18 @@
 		*(sendBuff+strlen(sendBuff))=0x00;
 //		printf("%s",sendBuff);
 		send_secure(sendBuff,strlen(sendBuff));
-		Command = recv_secure();
+		do{
+			Command = recv_secure();
+			Command2 = recv_secure();
+			if(!strcmp(Command,Command2))
+			{
+				send_secure("True",strlen("True"));
+			}
+			else
+			{
+				send_secure("False",strlen("false"));
+			}
+		}while(strcmp(Command,Command2));
 		if(!WriteFile(hcstdin_wr,strcat(Command,"\n"),strlen(Command)+1,&wr,NULL))
 		{
 				

