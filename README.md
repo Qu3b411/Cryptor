@@ -118,8 +118,7 @@ With all of the requirements installed, you can build the project as either ```D
   -     make Debug
 
 To specify a different payload set the Payload make variable
-  -     make Releas Payload='your-payload-here'
-  -     make Releas Payload='your-payload-here'
+  -     make Release Payload='your-payload-here'
 
 **During the build, you will encounter  multiple prompts for configuration information**
 
