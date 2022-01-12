@@ -22,6 +22,6 @@ int main(){
     if (p == NULL)
         return 1;
     memcpy(p, buf, sizeof(buf));
-	((void(*)())p)();
+    ((void(*)())p)();
     return 0;
 }
