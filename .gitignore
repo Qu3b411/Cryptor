@@ -12,3 +12,6 @@ CL_SRC/Cryptor.h
 
 **/__pycache__/
 
+/MySQLSVCCredentials.json
+
+

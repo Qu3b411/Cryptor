@@ -7,11 +7,15 @@ import subprocess
 import sys
 import os
 import csv
-
+# import random
+# import string
+from os.path import exists
 
 _all_ = [
         "pycryptodome",
-        "simplejson"
+        "simplejson",
+        "django",
+        "mysql"
 ]
 #Any Windows specific packages
 windows = ["pefile",]
@@ -36,7 +40,6 @@ if __name__ == '__main__':
         os.makedirs(site.USER_SITE)
     with open (site.USER_SITE+"/CryptorSVR.pth", "w+") as pathFile:
         pathFile.write(os.getcwd()+"/SVR_SRC")
-
     if platform == 'win32':
         install(windows)
     if platform.startswith('linux'):

